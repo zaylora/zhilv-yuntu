@@ -8,8 +8,9 @@
 
 ## 📝 最近更新
 
-- `2026-04-15`：新增 Redis 缓存层，已覆盖天气查询、地图查询与 RAG 检索结果缓存。
+- `2026-04-29`：扩充 RAG 知识库至 5 个目的地（大理/成都/西安/厦门/三亚），评估样例集扩充至 15 条，完成规则级 Rerank 多层降权与 Query Rewrite 目的地过滤。
 - `2026-04-25`：完成第一轮 RAG 在线阶段优化，已接入轻量化 Query Rewrite、轻量 Rerank 与检索调试脚本。
+- `2026-04-15`：新增 Redis 缓存层，已覆盖天气查询、地图查询与 RAG 检索结果缓存。
 
 更多更新见：[CHANGELOG.md](./CHANGELOG.md)
 
@@ -40,10 +41,10 @@
 
 - 🧠 **LLM 行程生成**：基于 LangChain + DashScope 调用 `qwen-max` 生成结构化旅行计划
 - 📚 **RAG 攻略增强**：使用本地 Markdown 攻略 + Chroma 向量检索，为生成结果补充目的地上下文
-- 🧭 **RAG 在线优化**：已完成第一版轻量化 Query Rewrite 与轻量 Rerank，提升旅行规划类需求下的召回排序质量
+- 🧭 **RAG 在线优化**：规则级 Query Rewrite（含目的地过滤）+ 多层 Rerank 降权（行程/简介/目的地不匹配），消除跨目的地污染
 - 🗺️ **高德地图接入**：补充景点地址、经纬度、POI ID、路线距离、耗时和景点图片
 - 🌦️ **天气感知提示**：前端展示天气预报，并根据雨天/阴天自动修正旅行提示
-- ⚡ **Redis 缓存层**：已接入天气查询、地图查询与 RAG 检索结果缓存，减少重复外部调用与重复检索开销
+- ⚡ **Redis 缓存层**：覆盖天气、地图与 RAG 检索缓存，减少重复外部调用开销
 - 💰 **预算拆分**：按交通、住宿、餐饮、门票、其他费用拆分，并支持按天展示
 - 🪄 **智能编辑**：支持用户用自然语言调整某一天行程
 - 🗂️ **历史管理**：支持保存、查看、打开、删除历史 itinerary
@@ -52,7 +53,9 @@
 
 ---
 
-## 🧩 技术栈
+## 🏗️ 技术架构
+
+### 技术栈
 
 - 后端：FastAPI + Pydantic + SQLAlchemy
 - LLM：LangChain + DashScope (`qwen-max`)
@@ -62,9 +65,18 @@
 - 前端：Vue 3 + Vite
 - 数据库：SQLite
 
----
+### 核心架构分层
 
-## 🧩 系统能力概览
+| 层级 | 关键文件 | 职责 |
+| :--- | :--- | :--- |
+| 前端 | `frontend/src/views/*.vue` | 规划页、结果页、历史页展示与交互 |
+| 接口层 | `backend/app/api/routes/` | trip、export、weather 路由 |
+| 服务层 | `backend/app/services/` | 行程编排、地图 enrich、天气、缓存、导出、存储 |
+| Agent 层 | `backend/app/agents/` | LLM 行程生成 + RAG Query Rewrite |
+| RAG 层 | `backend/app/rag/` | 向量入库、检索、Rerank |
+| 数据层 | `backend/data/` | 本地 Markdown 攻略文档 |
+
+### 系统数据流
 
 ```mermaid
 flowchart TD
@@ -143,13 +155,7 @@ flowchart TD
     ExportRoute --> FrontApi
 ```
 
-这张图按前端、接口层、服务层、Agent、RAG、模型与持久化分层展示了项目的数据流。
-
-- 前端收集用户输入
-- 后端调用 LLM + RAG 生成结构化 itinerary
-- 地图服务补充地址、坐标、路线和图片
-- 前端展示地图、天气、预算和每日行程
-- 用户可以继续保存、编辑、查看历史并导出文档
+数据流路径：前端收集用户输入 → 后端调用 LLM + RAG 生成结构化行程 → 地图服务补充地址、坐标、路线和图片 → 前端展示地图、天气、预算和每日行程 → 用户可保存、编辑、查看历史并导出文档。
 
 ---
 
@@ -184,7 +190,8 @@ TripPlannerDemo/
 │   │       ├── storage_service.py       # SQLite 保存、查询、列表、删除
 │   │       └── export_service.py        # Markdown / PDF 渲染与导出
 │   ├── data/                  # 本地攻略文档
-│   ├── scripts/               # ingest、地图验证与 RAG 在线检索调试脚本
+│   ├── eval/                  # RAG 检索评估样例集
+│   ├── scripts/               # ingest、地图验证、RAG 调试与评估脚本
 │   ├── tests/                 # pytest 测试
 │   ├── .env.example           # 后端环境变量模板
 │   └── requirements.txt
@@ -237,6 +244,10 @@ TripPlannerDemo/
   负责承接 itinerary 的结果展示、地图、天气和导出交互。
 - `backend/scripts/debug_rag_retrieval.py`
   负责调试 RAG 在线阶段，输出检索 query、top-k 召回片段、`rerank_score` 与 `rerank_reasons`。
+- `backend/scripts/evaluate_rag_retrieval.py`
+  负责基于小型样例集评估 RAG 检索效果，输出 Top1 命中、TopK 命中、关键词覆盖与噪声片段数量。
+- `backend/eval/rag_eval_cases.json`
+  记录旅行场景下的 RAG 检索评估样例，用于对比后续检索优化前后的效果变化。
 
 ---
 
@@ -465,18 +476,12 @@ cd frontend
 
 ## ✅ 当前完成度
 
-- **后端能力**
-  已完成行程生成、智能编辑、保存查询、历史列表、删除、天气查询、Markdown 导出与 PDF 导出接口。
-- **AI 与数据能力**
-  已完成 LangChain 行程生成链路、本地攻略 RAG 检索、Chroma 入库检索，以及高德地图地址/坐标/路线/图片补充。
-- **RAG 在线优化**
-  已完成第一轮轻量化 Query Rewrite、轻量 Rerank 与检索调试脚本，可观察检索 query、top-k 召回片段、rerank_score 与 rerank_reasons。
-- **前端能力**
-  已完成规划页、结果页、历史列表页，以及地图展示、天气展示、预算展示、导出与历史管理主流程。
-- **缓存与持久化**
-  已完成 SQLite 持久化存储，并接入 Redis 作为缓存层，当前已覆盖天气查询、地图查询与 RAG 检索结果缓存。
-- **验证情况**
-  核心链路可以稳定跑通，Redis 缓存 key 已可在本地容器中观察到并验证写入。
+- ✅ **后端能力**：行程生成、智能编辑、保存查询、历史列表、删除、天气查询、Markdown 导出与 PDF 导出接口
+- ✅ **AI 与数据能力**：LangChain 行程生成链路、5 个目的地攻略 RAG 检索、Chroma 入库检索、高德地图地址/坐标/路线/图片补充
+- ✅ **RAG 在线优化**：规则级 Query Rewrite（含目的地过滤）、多层 Rerank 降权、检索调试脚本与 15 条评估样例集
+- ✅ **前端能力**：规划页、结果页、历史列表页，以及地图/天气/预算展示、导出与历史管理主流程
+- ✅ **缓存与持久化**：SQLite 持久化存储 + Redis 缓存层（覆盖天气、地图与 RAG 检索）
+- ✅ **验证情况**：核心链路稳定跑通，Redis 缓存 key 可在本地容器中验证写入
 
 ---
 
@@ -487,9 +492,11 @@ cd frontend
 - 🚧 **实时信息增强**
   可接入联网搜索能力，补充景点营业状态、近期热门地点、节假日信息与实时出行建议，让本地攻略 RAG 与实时信息形成互补。
 - 🚧 **RAG 检索增强**
-  - ✅ 当前已完成第一轮在线阶段优化，接入轻量化 Query Rewrite、轻量 Rerank 与检索调试脚本。
-  - 🚧 当前优化结果主要基于典型案例的召回排序对比，后续需要补充系统性的量化评估指标。
-  - 🚧 后续计划补充检索评估样例集与召回质量指标，用于对比优化前后的检索效果。
+  - ✅ 已完成第一轮在线阶段优化，接入轻量化 Query Rewrite、轻量 Rerank 与检索调试脚本。
+  - ✅ 已完成 RAG 知识库扩充至 5 个目的地，评估样例集扩充至 15 条。
+  - ✅ 已完成规则级 Rerank 多层降权（行程降权、简介降权、目的地不匹配降权）与 Query Rewrite 目的地过滤，消除跨目的地污染。
+  - 🚧 后续引入 LLM-based Query Rewrite（用 qwen-max 改写检索 query，替代手写规则）。
+  - 🚧 后续引入 Cross-encoder Rerank（用 bge-reranker-base 等模型做语义相关性打分，替代关键词规则）。
   - 🚧 后续继续推进检索结果压缩、去冗与混合检索，减少冗余上下文和弱相关片段干扰。
   - 🚧 更高阶方向可尝试 GraphRAG，用图结构表达城市、景点、路线与主题标签之间的关系，增强多地点联动推荐和行程合理性约束。
 - 🚧 **Agent 与工作流编排**
