@@ -156,6 +156,7 @@ flowchart TD
     RagTool --> Retriever
     Retriever --> VectorDB
     VectorDB --> ChromaDB
+    Retriever --> CacheSvc
 
     CacheSvc --> Redis
     StorageSvc --> DBModels
@@ -323,32 +324,43 @@ TripPlannerDemo/
 
 ### 关键文件职责
 
+**后端**
+
 - `backend/app/services/trip_service.py`
-  负责 itinerary 主流程编排，包括天数拆分、预算估算、地图 enrich 以及编辑后的统一刷新。
+  itinerary 主流程编排，包括天数拆分、预算估算、地图 enrich 以及编辑后的统一刷新。
 - `backend/app/services/cache_service.py`
-  负责 Redis 客户端懒加载、JSON 缓存读写与 Redis 不可用时的优雅降级。
+  Redis 客户端懒加载、JSON 缓存读写与 Redis 不可用时的优雅降级。
 - `backend/app/agents/trip_planner_agent.py`
-  负责调用大模型生成结构化旅行草稿，并处理单日编辑时的 LLM 输出。
+  调用大模型生成结构化旅行草稿，并处理单日编辑时的 LLM 输出。
 - `backend/app/agents/tools/rag_tool.py`
-  负责 RAG 在线阶段的 Query Rewrite，优先使用 LLM-based 改写（qwen-max），失败时 fallback 到规则级关键词提取。
+  RAG 在线阶段的 Query Rewrite，优先 LLM-based 改写（qwen-max），fallback 到规则级关键词提取。
 - `backend/app/rag/retriever.py`
-  负责基础向量召回后的结果封装、Redis 缓存以及 Cross-encoder Rerank（qwen3-rerank），优先语义级重排序，失败时 fallback 到规则级打分。
+  向量召回结果封装、RAG 缓存、Cross-encoder Rerank（qwen3-rerank）+ Rerank 缓存，fallback 到规则级打分。
 - `backend/app/services/map_service.py`
-  负责对接高德地图 Web 服务，并结合 Redis 缓存补充地址、经纬度、路线估算和景点图片。
+  对接高德地图 Web 服务，结合 Redis 缓存补充地址、经纬度、路线估算和景点图片。
 - `backend/app/services/export_service.py`
-  负责把 itinerary 渲染成 Markdown 与中文 PDF。
+  itinerary 渲染为 Markdown 与中文 PDF。
 - `backend/app/services/storage_service.py`
-  负责 SQLite 数据保存、读取、历史列表和删除。
-- `frontend/src/services/api.ts`
-  负责前端与后端接口通信。
-- `frontend/src/views/Result.vue`
-  负责承接 itinerary 的结果展示、地图、天气和导出交互。
+  SQLite 数据保存、读取、历史列表和删除。
 - `backend/scripts/debug_rag_retrieval.py`
-  负责调试 RAG 在线阶段，输出检索 query、top-k 召回片段、`rerank_score` 与 `rerank_reasons`。
+  RAG 在线阶段调试，输出检索 query、top-k 召回片段、`rerank_score` 与 `rerank_reasons`。
 - `backend/scripts/evaluate_rag_retrieval.py`
-  负责基于小型样例集评估 RAG 检索效果，输出 Top1/TopK 命中率、MRR、关键词覆盖、Noise Rate、Latency 与跨目的地污染指标。
+  RAG 检索效果评估，输出 Top1/TopK 命中率、MRR、Noise Rate、Latency 与跨目的地污染指标。
 - `backend/eval/rag_eval_cases.json`
-  记录旅行场景下的 RAG 检索评估样例，用于对比后续检索优化前后的效果变化。
+  RAG 检索评估样例集，用于对比优化前后的效果变化。
+
+**前端**
+
+- `frontend/src/services/api.ts`
+  Axios 封装与后端接口通信。
+- `frontend/src/views/Home.vue`
+  规划页，收集用户输入并发起行程生成请求。
+- `frontend/src/views/Result.vue`
+  结果展示页，承接 itinerary、地图、天气和导出交互。
+- `frontend/src/views/History.vue`
+  历史列表页，支持查看、打开和删除历史行程。
+- `frontend/src/components/AmapTripMap.vue`
+  高德地图组件，展示路线可视化与景点标记。
 
 ---
 
@@ -356,7 +368,21 @@ TripPlannerDemo/
 
 以下命令默认从项目根目录 `TripPlannerDemo/` 开始执行。
 
-### 1. 启动后端
+### 1. 启动 Redis（可选）
+
+```bash
+docker run -d --name tripplanner-redis -p 6379:6379 redis:7
+```
+
+如果已创建过容器：
+
+```bash
+docker start tripplanner-redis
+```
+
+在 `backend/.env` 中设置 `REDIS_ENABLED=true` 开启缓存（天气、地图、RAG 检索与 Rerank 结果）。
+
+### 2. 启动后端
 
 ```bash
 cd TripPlannerDemo
@@ -373,7 +399,7 @@ http://127.0.0.1:8000/
 http://127.0.0.1:8000/docs
 ```
 
-### 2. 启动前端
+### 3. 启动前端
 
 ```bash
 cd TripPlannerDemo
@@ -396,23 +422,37 @@ http://127.0.0.1:5173
 ### 后端 `backend/.env`
 
 ```env
-LLM_PROVIDER=openai_compatible
-LLM_API_KEY=your_dashscope_api_key
-LLM_MODEL=qwen-max
+# LLM
+LLM_PROVIDER=openai_compatible          # 固定值，使用 OpenAI 兼容接口
+LLM_API_KEY=your_dashscope_api_key      # DashScope API Key
+LLM_MODEL=qwen-max                      # 生成模型
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-LLM_TIMEOUT_SECONDS=60
-LLM_MAX_RETRIES=1
+LLM_TIMEOUT_SECONDS=60                  # 单次 LLM 调用超时
+LLM_MAX_RETRIES=1                       # 失败重试次数
 
-CHROMA_DB_DIR=db/chroma_db
-CHROMA_COLLECTION_NAME=travel_guides
-EMBEDDING_MODEL=text-embedding-v4
-EMBEDDING_BATCH_SIZE=10
+# RAG / 向量库
+CHROMA_DB_DIR=db/chroma_db              # ChromaDB 持久化目录
+CHROMA_COLLECTION_NAME=travel_guides    # 集合名称
+EMBEDDING_MODEL=text-embedding-v4       # DashScope 嵌入模型
+EMBEDDING_BATCH_SIZE=10                 # 单批嵌入条数
+RERANK_MODEL=qwen3-rerank              # DashScope Rerank 模型
 
-AMAP_API_KEY=your_amap_web_service_key
+# Redis / 缓存
+REDIS_ENABLED=false                     # 是否开启缓存（需先启动 Redis）
+REDIS_URL=redis://127.0.0.1:6379/0     # Redis 连接地址
+REDIS_KEY_PREFIX=trip_planner           # 缓存 key 前缀，避免多项目冲突
+REDIS_DEFAULT_TTL_SECONDS=1800          # 默认缓存 30 分钟
+REDIS_WEATHER_TTL_SECONDS=1800          # 天气缓存 30 分钟
+REDIS_MAP_TTL_SECONDS=86400             # 地图缓存 24 小时
+REDIS_RAG_TTL_SECONDS=21600             # RAG 检索缓存 6 小时
+REDIS_RERANK_TTL_SECONDS=21600          # Rerank 缓存 6 小时
+
+# 高德地图
+AMAP_API_KEY=your_amap_web_service_key  # 高德 Web 服务 Key
 AMAP_BASE_URL=https://restapi.amap.com/v3
-AMAP_DEFAULT_CITY=
-AMAP_TIMEOUT_SECONDS=20
-ENABLE_AMAP_ENRICHMENT=true
+AMAP_DEFAULT_CITY=                      # 默认城市（可留空）
+AMAP_TIMEOUT_SECONDS=20                 # 高德接口超时
+ENABLE_AMAP_ENRICHMENT=true             # 是否开启地图信息补全
 ```
 
 ### 前端 `frontend/.env`
