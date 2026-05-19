@@ -63,6 +63,13 @@ def install_fake_langchain_openai(monkeypatch, result: trip_planner_agent.Planne
     class FakeResponse:
         def __init__(self, content):
             self.content = content
+            self.response_metadata = {
+                "token_usage": {
+                    "prompt_tokens": 100,
+                    "completion_tokens": 50,
+                    "total_tokens": 150,
+                }
+            }
 
     class FakeChatOpenAI:
         last_init_kwargs = None
@@ -92,7 +99,7 @@ def test_collect_trip_context_calls_rag_tool_with_expected_arguments(monkeypatch
         captured["pace"] = pace
         captured["special_notes"] = special_notes
         captured["top_k"] = top_k
-        return ["攻略片段 1", "攻略片段 2"]
+        return ["攻略片段 1", "攻略片段 2"], {"prompt_tokens": 0, "completion_tokens": 0}, {"prompt_tokens": 0, "completion_tokens": 0}
 
     monkeypatch.setattr(
         trip_planner_agent,
@@ -100,7 +107,7 @@ def test_collect_trip_context_calls_rag_tool_with_expected_arguments(monkeypatch
         fake_get_destination_guide_context,
     )
 
-    results = trip_planner_agent.collect_trip_context(
+    results, _, _ = trip_planner_agent.collect_trip_context(
         "大理",
         ["美食", "拍照"],
         pace="轻松",
@@ -121,13 +128,14 @@ def test_generate_planner_draft_returns_none_when_api_key_is_missing(monkeypatch
     """测试没有配置 LLM_API_KEY 时会直接返回 None。"""
     monkeypatch.setattr(trip_planner_agent, "LLM_API_KEY", "")
 
-    result = trip_planner_agent.generate_planner_draft(
+    result, usage = trip_planner_agent.generate_planner_draft(
         request=build_trip_request(),
         rag_contexts=["大理古城适合慢游。"],
         day_count=3,
     )
 
     assert result is None
+    assert usage == {"prompt_tokens": 0, "completion_tokens": 0}
 
 
 def test_generate_planner_draft_returns_structured_result_with_mock_llm(monkeypatch) -> None:
@@ -141,13 +149,15 @@ def test_generate_planner_draft_returns_structured_result_with_mock_llm(monkeypa
     expected_result = build_planner_draft(day_count=3)
     FakeChatOpenAI, _ = install_fake_langchain_openai(monkeypatch, expected_result)
 
-    result = trip_planner_agent.generate_planner_draft(
+    result, usage = trip_planner_agent.generate_planner_draft(
         request=build_trip_request(),
         rag_contexts=["大理古城适合傍晚散步。", "洱海生态廊道适合骑行。"],
         day_count=3,
     )
 
     assert result == expected_result
+    assert usage["prompt_tokens"] == 100
+    assert usage["completion_tokens"] == 50
     assert FakeChatOpenAI.last_init_kwargs == {
         "model": "fake-model",
         "temperature": 0.3,
@@ -198,7 +208,7 @@ def test_generate_planner_draft_returns_none_when_day_count_mismatches(monkeypat
     wrong_result = build_planner_draft(day_count=2)
     install_fake_langchain_openai(monkeypatch, wrong_result)
 
-    result = trip_planner_agent.generate_planner_draft(
+    result, usage = trip_planner_agent.generate_planner_draft(
         request=build_trip_request(),
         rag_contexts=["大理古城适合傍晚散步。"],
         day_count=3,
@@ -213,6 +223,13 @@ def test_generate_day_edit_draft_accepts_nested_day_shape(monkeypatch) -> None:
     class FakeResponse:
         def __init__(self, content):
             self.content = content
+            self.response_metadata = {
+                "token_usage": {
+                    "prompt_tokens": 80,
+                    "completion_tokens": 30,
+                    "total_tokens": 110,
+                }
+            }
 
     class FakeChatOpenAI:
         def __init__(self, **kwargs):
@@ -300,10 +317,12 @@ def test_generate_day_edit_draft_accepts_nested_day_shape(monkeypatch) -> None:
         preserve_constraints=["保留预算结构"],
     )
 
-    result = trip_planner_agent.generate_day_edit_draft(request, target_day)
+    result, usage = trip_planner_agent.generate_day_edit_draft(request, target_day)
 
     assert result is not None
     assert result.theme == "更轻松的喜洲慢游"
+    assert usage["prompt_tokens"] == 80
+    assert usage["completion_tokens"] == 30
     assert result.spot_name == "双廊古镇"
     assert result.spot_description == "更适合看海、发呆和看日落。"
     assert result.meal_name == "海景下午茶"

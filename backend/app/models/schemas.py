@@ -117,6 +117,29 @@ class DayPlan(BaseModel):
     notes: list[str] = Field(default_factory=list, description="补充说明")
 
 
+class TokenUsage(BaseModel):
+    """LLM 调用的 token 消耗统计。"""
+
+    rewrite_prompt_tokens: int = Field(default=0, ge=0, description="Query Rewrite 输入 token")
+    rewrite_completion_tokens: int = Field(default=0, ge=0, description="Query Rewrite 输出 token")
+    planner_prompt_tokens: int = Field(default=0, ge=0, description="行程生成输入 token")
+    planner_completion_tokens: int = Field(default=0, ge=0, description="行程生成输出 token")
+    rerank_prompt_tokens: int = Field(default=0, ge=0, description="Rerank 输入 token")
+    rerank_completion_tokens: int = Field(default=0, ge=0, description="Rerank 输出 token")
+
+    @property
+    def total_prompt_tokens(self) -> int:
+        return self.rewrite_prompt_tokens + self.planner_prompt_tokens + self.rerank_prompt_tokens
+
+    @property
+    def total_completion_tokens(self) -> int:
+        return self.rewrite_completion_tokens + self.planner_completion_tokens + self.rerank_completion_tokens
+
+    @property
+    def total_tokens(self) -> int:
+        return self.total_prompt_tokens + self.total_completion_tokens
+
+
 class Itinerary(BaseModel):
     """完整行程。"""
 
@@ -131,6 +154,7 @@ class Itinerary(BaseModel):
         default_factory=list,
         description="RAG 或规则生成产生的补充说明",
     )
+    token_usage: TokenUsage | None = Field(default=None, description="LLM token 消耗统计")
 
 
 class TripDetailResponse(BaseModel):
@@ -157,3 +181,21 @@ class TripListResponse(BaseModel):
 
     total: int = Field(..., ge=0, description="列表总数")
     items: list[TripSummaryItem] = Field(default_factory=list, description="行程摘要列表")
+
+
+class TripTokenStatsItem(BaseModel):
+    """单个行程的 token 消耗。"""
+
+    trip_id: str = Field(..., description="行程 ID")
+    destination: str = Field(..., description="目的地")
+    token_usage: TokenUsage = Field(..., description="token 消耗")
+
+
+class TokenStatsResponse(BaseModel):
+    """Token 消耗统计接口的响应结构。"""
+
+    trip_count: int = Field(..., ge=0, description="统计行程数")
+    total_prompt_tokens: int = Field(default=0, ge=0, description="总输入 token")
+    total_completion_tokens: int = Field(default=0, ge=0, description="总输出 token")
+    total_tokens: int = Field(default=0, ge=0, description="总 token")
+    items: list[TripTokenStatsItem] = Field(default_factory=list, description="各行程 token 明细")

@@ -27,7 +27,7 @@ def test_retrieve_travel_guide_formats_chunks_as_text(monkeypatch) -> None:
 
     monkeypatch.setattr(retriever, "search_guide_chunks", fake_search_guide_chunks)
 
-    results = retriever.retrieve_travel_guide("大理 古城 美食", top_k=2)
+    results, _ = retriever.retrieve_travel_guide("大理 古城 美食", top_k=2)
 
     assert results == ["[来源: dali_guide.md | 标题: 大理古城]\n大理古城适合慢游和拍照。"]
 
@@ -42,6 +42,6 @@ def test_retrieve_travel_guide_returns_empty_when_no_chunks(monkeypatch) -> None
 
     monkeypatch.setattr(retriever, "search_guide_chunks", fake_search_guide_chunks)
 
-    results = retriever.retrieve_travel_guide("火星 沙漠 极地科考", top_k=2)
+    results, _ = retriever.retrieve_travel_guide("火星 沙漠 极地科考", top_k=2)
 
     assert results == []

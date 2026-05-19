@@ -80,7 +80,7 @@ def test_generate_trip_itinerary_keeps_request_preferences_in_summary() -> None:
 '''
 def test_edit_trip_itinerary_updates_target_day_theme(monkeypatch) -> None:
     """测试编辑逻辑可以修改指定天数的主题与备注。"""
-    monkeypatch.setattr(trip_service, "generate_day_edit_draft", lambda request, target_day: None)
+    monkeypatch.setattr(trip_service, "generate_day_edit_draft", lambda request, target_day: (None, {"prompt_tokens": 0, "completion_tokens": 0}))
     original_itinerary = generate_trip_itinerary(build_trip_request())
 
     edit_request = TripEditRequest(
@@ -98,8 +98,8 @@ def test_edit_trip_itinerary_updates_target_day_theme(monkeypatch) -> None:
 
 
 def test_edit_trip_itinerary_can_replace_first_spot_with_free_time(monkeypatch) -> None:
-    """测试“不要安排”指令会把景点调整成自由活动。"""
-    monkeypatch.setattr(trip_service, "generate_day_edit_draft", lambda request, target_day: None)
+    “””测试”不要安排”指令会把景点调整成自由活动。”””
+    monkeypatch.setattr(trip_service, “generate_day_edit_draft”, lambda request, target_day: (None, {“prompt_tokens”: 0, “completion_tokens”: 0}))
     original_itinerary = generate_trip_itinerary(build_trip_request())
 
     edit_request = TripEditRequest(
@@ -130,7 +130,7 @@ def test_edit_trip_itinerary_can_apply_llm_day_edit(monkeypatch) -> None:
     monkeypatch.setattr(
         trip_service,
         "generate_day_edit_draft",
-        lambda request, target_day: FakeDayEditDraft(),
+        lambda request, target_day: (FakeDayEditDraft(), {"prompt_tokens": 80, "completion_tokens": 30}),
     )
     original_itinerary = generate_trip_itinerary(build_trip_request())
 

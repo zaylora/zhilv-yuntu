@@ -97,13 +97,18 @@ def main() -> int:
     print(json.dumps(request.model_dump(mode="json"), ensure_ascii=False, indent=2))
     print()
 
-    rag_contexts = collect_trip_context(
+    rag_contexts, rewrite_usage, rerank_usage = collect_trip_context(
         destination=request.destination,
         preferences=request.preferences,
         pace=request.pace,
         special_notes=request.special_notes,
         top_k=args.top_k,
     )
+
+    print("=== Token 消耗 ===")
+    print(f"Query Rewrite: prompt={rewrite_usage.get('prompt_tokens', 0)}, completion={rewrite_usage.get('completion_tokens', 0)}")
+    print(f"Rerank: prompt={rerank_usage.get('prompt_tokens', 0)}, completion={rerank_usage.get('completion_tokens', 0)}")
+    print()
 
     print("=== RAG 上下文 ===")
     if rag_contexts:
@@ -114,11 +119,15 @@ def main() -> int:
         print("未检索到本地攻略上下文。")
         print()
 
-    draft = generate_planner_draft(
+    draft, planner_usage = generate_planner_draft(
         request=request,
         rag_contexts=rag_contexts,
         day_count=day_count,
     )
+
+    print("=== Planner Token 消耗 ===")
+    print(f"Planner: prompt={planner_usage.get('prompt_tokens', 0)}, completion={planner_usage.get('completion_tokens', 0)}")
+    print()
 
     print("=== PlannerDraft ===")
     if draft is None:

@@ -94,14 +94,48 @@ def _score_chunk_for_rerank(
 _NOISE_TITLES = {"文档开头"}
 
 
+def _extract_rerank_token_usage(response_data: dict) -> tuple[dict[str, int], bool]:
+    """只读取接口返回的官方 usage；没有 usage 时不做本地估算。"""
+    usage = response_data.get("usage") or response_data.get("output", {}).get("usage") or {}
+    prompt_tokens = (
+        usage.get("prompt_tokens")
+        or usage.get("input_tokens")
+        or usage.get("input_token_count")
+        or 0
+    )
+    completion_tokens = (
+        usage.get("completion_tokens")
+        or usage.get("output_tokens")
+        or usage.get("output_token_count")
+        or 0
+    )
+    total_tokens = usage.get("total_tokens") or usage.get("total_token_count") or 0
+
+    if not prompt_tokens and not completion_tokens and total_tokens:
+        prompt_tokens = total_tokens
+
+    if prompt_tokens or completion_tokens:
+        return {
+            "prompt_tokens": int(prompt_tokens),
+            "completion_tokens": int(completion_tokens),
+        }, True
+
+    return {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+    }, False
+
+
 def _rerank_with_dashscope(
     query: str,
     chunks: list[dict[str, str]],
     top_k: int,
-) -> list[tuple[float, int]] | None:
-    """调用 DashScope qwen3-rerank 模型做语义重排序。失败返回 None。"""
+) -> tuple[list[tuple[float, int]] | None, dict[str, int]]:
+    """调用 DashScope qwen3-rerank 模型做语义重排序。返回 (scored, token_usage)。"""
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     if not LLM_API_KEY or not chunks:
-        return None
+        print("[rerank] skip qwen3-rerank: missing LLM_API_KEY or empty chunks")
+        return None, empty_usage
 
     # 过滤已知噪声片段，避免浪费 rerank 名额
     filtered = [
@@ -109,7 +143,8 @@ def _rerank_with_dashscope(
         if chunk.get("title", "") not in _NOISE_TITLES
     ]
     if not filtered:
-        return None
+        print("[rerank] skip qwen3-rerank: all chunks are noise")
+        return None, empty_usage
 
     original_indices = [i for i, _ in filtered]
     clean_chunks = [chunk for _, chunk in filtered]
@@ -118,21 +153,25 @@ def _rerank_with_dashscope(
         f"{chunk.get('title', '')}\n{chunk.get('text', '')}"
         for chunk in clean_chunks
     ]
-
+    instruct = (
+        "你是一个旅行攻略检索专家。"
+        "给定一个旅行规划查询，从候选文档中检索出最具体、最详细、最能直接回答用户问题的片段。"
+        "优先选择包含具体景点名称、活动推荐、实用信息的片段，"
+        "避免选择泛化的目的地简介、文档开头等信息量低的片段。"
+    )
     payload = {
         "model": RERANK_MODEL,
         "documents": documents,
         "query": query,
         "top_n": min(top_k, len(documents)),
-        "instruct": (
-            "你是一个旅行攻略检索专家。"
-            "给定一个旅行规划查询，从候选文档中检索出最具体、最详细、最能直接回答用户问题的片段。"
-            "优先选择包含具体景点名称、活动推荐、实用信息的片段，"
-            "避免选择泛化的目的地简介、文档开头等信息量低的片段。"
-        ),
+        "instruct": instruct,
     }
 
     try:
+        print(
+            f"[rerank] calling qwen3-rerank: query={query}, "
+            f"candidate_count={len(clean_chunks)}, top_k={top_k}"
+        )
         with httpx.Client(timeout=30) as client:
             response = client.post(
                 DASHSCOPE_RERANK_URL,
@@ -142,20 +181,47 @@ def _rerank_with_dashscope(
                     "Content-Type": "application/json",
                 },
             )
+            print(f"[rerank] qwen3-rerank status_code={response.status_code}")
             if response.status_code != 200:
+                print(f"[rerank] qwen3-rerank response preview={response.text[:500]}")
                 logger.warning(
                     "dashscope rerank HTTP %d: %s",
                     response.status_code,
                     response.text[:500],
                 )
-                return None
+                return None, empty_usage
             data = response.json()
+
+        # 只提取接口返回的官方 token usage；没有 usage 时保持 0，不做估算。
+        token_usage, has_official_usage = _extract_rerank_token_usage(data)
+        usage_source = "api" if has_official_usage else "none"
+        print(
+            "[rerank] qwen3-rerank token: "
+            f"prompt={token_usage['prompt_tokens']}, "
+            f"completion={token_usage['completion_tokens']}, "
+            f"source={usage_source}"
+        )
+        if not has_official_usage:
+            print(
+                "[rerank] qwen3-rerank response has no official usage field; "
+                "precise token count is unavailable from this response."
+            )
+        if token_usage["prompt_tokens"] or token_usage["completion_tokens"]:
+            logger.info(
+                "dashscope rerank token: prompt=%d, completion=%d",
+                token_usage["prompt_tokens"],
+                token_usage["completion_tokens"],
+            )
 
         # 兼容两种响应格式
         results = data.get("output", {}).get("results", []) or data.get("results", [])
         if not results:
+            print(
+                "[rerank] qwen3-rerank empty results, "
+                f"response preview={json.dumps(data, ensure_ascii=False)[:500]}"
+            )
             logger.warning("dashscope rerank empty results, response: %s", json.dumps(data, ensure_ascii=False)[:500])
-            return None
+            return None, token_usage
 
         scored = [
             (float(item.get("relevance_score", 0)), original_indices[int(item.get("index", 0))])
@@ -163,12 +229,14 @@ def _rerank_with_dashscope(
             if int(item.get("index", 0)) < len(original_indices)
         ]
         scored.sort(key=lambda x: x[0], reverse=True)
+        print(f"[rerank] qwen3-rerank success: results={len(scored)}")
         logger.info("dashscope rerank: query=%s, results=%d", query, len(scored))
-        return scored
+        return scored, token_usage
 
     except Exception as exc:
+        print(f"[rerank] qwen3-rerank failed: {type(exc).__name__}: {exc}")
         logger.warning("dashscope rerank failed: %s, falling back to rule-based", exc)
-        return None
+        return None, empty_usage
 
 
 def _build_rerank_cache_key(query: str, chunks: list[dict[str, str]]) -> str:
@@ -197,8 +265,10 @@ def rerank_guide_chunks(
     matched_chunks: list[dict[str, str]],
     top_k: int,
     destination: str | None = None,
-) -> list[dict[str, str]]:
-    """对召回候选做重排序，优先 Cross-encoder，fallback 规则级。"""
+) -> tuple[list[dict[str, str]], dict[str, int]]:
+    """对召回候选做重排序，优先 Cross-encoder，fallback 规则级。返回 (chunks, rerank_token_usage)。"""
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+
     # 尝试从缓存读取 rerank 结果
     cache_key = _build_rerank_cache_key(query, matched_chunks)
     cached = get_cached_json(cache_key)
@@ -212,12 +282,13 @@ def rerank_guide_chunks(
                 enriched["rerank_score"] = item["s"]
                 enriched["rerank_reasons"] = [f"cross-encoder:{item['s']:.4f}"]
                 reranked.append(enriched)
-        return reranked[:top_k]
+        return reranked[:top_k], empty_usage
     logger.info("rerank cache miss: query=%s", query)
 
     # 优先尝试 DashScope Cross-encoder Rerank
-    dashscope_results = _rerank_with_dashscope(query, matched_chunks, top_k)
+    dashscope_results, rerank_token_usage = _rerank_with_dashscope(query, matched_chunks, top_k)
     if dashscope_results:
+        print("[rerank] using qwen3-rerank results")
         # 写入缓存：只存索引和分数，不重复存文本
         cache_value = [
             {"i": idx, "s": round(score, 4)}
@@ -232,9 +303,10 @@ def rerank_guide_chunks(
                 enriched_chunk["rerank_score"] = round(score, 4)
                 enriched_chunk["rerank_reasons"] = [f"cross-encoder:{score:.4f}"]
                 reranked.append(enriched_chunk)
-        return reranked[:top_k]
+        return reranked[:top_k], rerank_token_usage
 
     # fallback 到规则级 Rerank
+    print("[rerank] qwen3-rerank unavailable, using rule-based rerank")
     logger.info("rerank_guide_chunks: using rule-based rerank")
     scored_chunks: list[tuple[int, int, dict[str, str]]] = []
     for index, chunk in enumerate(matched_chunks):
@@ -244,13 +316,13 @@ def rerank_guide_chunks(
         scored_chunks.append((score, -index, enriched_chunk))
 
     scored_chunks.sort(key=lambda item: (item[0], item[1]), reverse=True)
-    return [chunk for _, _, chunk in scored_chunks[:top_k]]
+    return [chunk for _, _, chunk in scored_chunks[:top_k]], empty_usage
 
 
 def retrieve_travel_guide_chunks(
     query: str, top_k: int = 3, destination: str | None = None
-) -> list[dict[str, str]]:
-    """返回带轻量 rerank 的原始攻略片段，便于调试和上层复用。"""
+) -> tuple[list[dict[str, str]], dict[str, int]]:
+    """返回带轻量 rerank 的原始攻略片段。返回 (chunks, rerank_token_usage)。"""
     candidate_k = max(top_k * 2, 6)
     matched_chunks = search_guide_chunks(query=query, top_k=candidate_k)
     return rerank_guide_chunks(
@@ -258,16 +330,17 @@ def retrieve_travel_guide_chunks(
     )
 
 
-def retrieve_travel_guide(query: str, top_k: int = 3) -> list[str]:
-    """返回最相关的攻略片段，供上层组装上下文。"""
+def retrieve_travel_guide(query: str, top_k: int = 3) -> tuple[list[str], dict[str, int]]:
+    """返回最相关的攻略片段。返回 (texts, rerank_token_usage)。"""
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     cache_key = f"rag:guide:{_normalize_cache_text(query)}:{top_k}"
     cached_value = get_cached_json(cache_key)
     if cached_value is not None:
         logger.info("rag cache hit: query=%s top_k=%s", query, top_k)
-        return [str(item) for item in cached_value]
+        return [str(item) for item in cached_value], empty_usage
     logger.info("rag cache miss: query=%s top_k=%s", query, top_k)
 
-    matched_chunks = retrieve_travel_guide_chunks(query=query, top_k=top_k)
+    matched_chunks, rerank_usage = retrieve_travel_guide_chunks(query=query, top_k=top_k)
 
     results: list[str] = []
     for chunk in matched_chunks:
@@ -276,4 +349,4 @@ def retrieve_travel_guide(query: str, top_k: int = 3) -> list[str]:
         )
 
     set_cached_json(cache_key, results, expire_seconds=REDIS_RAG_TTL_SECONDS)
-    return results
+    return results, rerank_usage

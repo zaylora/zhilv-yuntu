@@ -46,13 +46,13 @@ def main() -> int:
     args = parser.parse_args()
 
     preferences = _parse_preferences(args.preferences)
-    query = build_destination_query(
+    query, _ = build_destination_query(
         destination=args.destination,
         preferences=preferences,
         pace=args.pace or None,
         special_notes=args.special_notes or None,
     )
-    matched_chunks = retrieve_travel_guide_chunks(query=query, top_k=args.top_k)
+    matched_chunks, _ = retrieve_travel_guide_chunks(query=query, top_k=args.top_k)
 
     print("=== RAG 检索调试 ===")
     print(f"destination: {args.destination}")

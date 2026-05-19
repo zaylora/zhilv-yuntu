@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import (
     Itinerary,
+    TokenStatsResponse,
     TripDetailResponse,
     TripEditRequest,
     TripListResponse,
@@ -11,6 +12,7 @@ from app.models.schemas import (
 from app.services.storage_service import (
     delete_itinerary_by_trip_id,
     get_itinerary_by_trip_id,
+    get_token_stats,
     list_saved_itineraries,
     save_itinerary,
 )
@@ -30,6 +32,12 @@ def list_trips() -> TripListResponse:
 def generate_trip(request: TripRequest) -> Itinerary:
     """生成结构化 itinerary。"""
     return generate_trip_itinerary(request)
+
+
+@router.get("/stats", response_model=TokenStatsResponse)
+def get_trip_token_stats() -> TokenStatsResponse:
+    """返回所有已保存行程的 token 消耗统计。"""
+    return get_token_stats()
 
 
 @router.post("/edit", response_model=Itinerary)

@@ -15,6 +15,7 @@ from app.models.schemas import (
     Itinerary,
     MealItem,
     SpotItem,
+    TokenUsage,
     TransportItem,
     TripEditRequest,
     TripRequest,
@@ -238,13 +239,43 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
     day_count = (request.end_date - request.start_date).days + 1
     day_count = max(day_count, 1)
 
-    rag_contexts = collect_trip_context(
+    rag_contexts, rewrite_usage, rerank_usage = collect_trip_context(
         destination=request.destination,
         preferences=request.preferences,
         pace=request.pace,
         special_notes=request.special_notes,
     )
-    llm_draft = generate_planner_draft(request, rag_contexts, day_count)
+    llm_draft, planner_usage = generate_planner_draft(request, rag_contexts, day_count)
+
+    token_usage = TokenUsage(
+        rewrite_prompt_tokens=rewrite_usage.get("prompt_tokens", 0),
+        rewrite_completion_tokens=rewrite_usage.get("completion_tokens", 0),
+        planner_prompt_tokens=planner_usage.get("prompt_tokens", 0),
+        planner_completion_tokens=planner_usage.get("completion_tokens", 0),
+        rerank_prompt_tokens=rerank_usage.get("prompt_tokens", 0),
+        rerank_completion_tokens=rerank_usage.get("completion_tokens", 0),
+    )
+    print(
+        "[token_usage] Query Rewrite: "
+        f"prompt={token_usage.rewrite_prompt_tokens}, "
+        f"completion={token_usage.rewrite_completion_tokens}"
+    )
+    print(
+        "[token_usage] Rerank: "
+        f"prompt={token_usage.rerank_prompt_tokens}, "
+        f"completion={token_usage.rerank_completion_tokens}"
+    )
+    print(
+        "[token_usage] Planner: "
+        f"prompt={token_usage.planner_prompt_tokens}, "
+        f"completion={token_usage.planner_completion_tokens}"
+    )
+    print(
+        "[token_usage] Total: "
+        f"prompt={token_usage.total_prompt_tokens}, "
+        f"completion={token_usage.total_completion_tokens}, "
+        f"all={token_usage.total_tokens}"
+    )
     fallback_spot_names = _build_demo_spot_names(request.destination, rag_contexts, day_count)
 
     raw_days: list[dict[str, object]] = []
@@ -409,6 +440,7 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
         budget_breakdown=BudgetBreakdown(),
         tips=tips,
         source_notes=source_notes,
+        token_usage=token_usage,
     )
     return _maybe_enrich_itinerary_with_map_data(
         itinerary,
@@ -435,8 +467,9 @@ def edit_trip_itinerary(request: TripEditRequest) -> Itinerary:
             pass
 
     llm_edit_applied = False
+    edit_token_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     if target_day is not None:
-        day_edit_draft = generate_day_edit_draft(request, target_day)
+        day_edit_draft, edit_token_usage = generate_day_edit_draft(request, target_day)
         if day_edit_draft is not None:
             target_day.theme = day_edit_draft.theme
             if target_day.spots:
@@ -482,6 +515,13 @@ def edit_trip_itinerary(request: TripEditRequest) -> Itinerary:
         updated_itinerary.destination,
     )
     updated_itinerary.tips.append("已根据你的修改要求更新目标日期，出发前建议再确认当天交通、天气和景点开放情况。")
+
+    updated_itinerary.token_usage = TokenUsage(
+        rewrite_prompt_tokens=0,
+        rewrite_completion_tokens=0,
+        planner_prompt_tokens=edit_token_usage.get("prompt_tokens", 0),
+        planner_completion_tokens=edit_token_usage.get("completion_tokens", 0),
+    )
 
     reference_budget = (
         updated_itinerary.estimated_budget

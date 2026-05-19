@@ -228,4 +228,46 @@ trip_planner:rerank:厦门 骑行 海景 休闲 日落 放松:14207650ed1a
 
 缓存命中后延迟降低 41.6%，回到接近 LLM Rewrite 阶段水平，同时保留 Cross-encoder Rerank 的质量提升。
 
+## 2026-05-19
 
+### Token 消耗统计
+
+- 在 `schemas.py` 中为 `Itinerary` 增加 `token_usage` 字段，记录单次行程生成过程中的 token 消耗。
+- 在 `rag_tool.py` 中提取 LLM-based Query Rewrite 的输入/输出 token。
+- 在 `retriever.py` 中提取 DashScope qwen3-rerank 官方 `usage`，记录 Rerank 输入/输出 token。
+- 在 `trip_planner_agent.py` 中提取 Planner 行程生成的输入/输出 token。
+- 在 `trip_service.py` 中汇总 Query Rewrite、Rerank、Planner 三段 token，并在后端终端打印分项与总量。
+- 新增 `/trip/stats` 接口，可统计已保存行程的 token 消耗汇总。
+
+**本次前端输入**
+
+```text
+目的地城市：大理
+开始日期：2026-05-19
+结束日期：2026-05-21
+人数：2
+旅行天数：3 天
+节奏偏好：轻松
+住宿偏好：舒适型
+预算：3200
+旅行偏好：自然风景、拍照、美食
+饮食偏好：少辣
+额外要求：不想太早起床，希望安排一个适合看日落的地点。
+```
+
+**本次验证日志**
+
+```text
+[rerank] qwen3-rerank token: prompt=1703, completion=0, source=api
+[trip_planner_agent] 大模型调用完成。token: prompt=1159, completion=438
+[token_usage] Query Rewrite: prompt=134, completion=19
+[token_usage] Rerank: prompt=1703, completion=0
+[token_usage] Planner: prompt=1159, completion=438
+[token_usage] Total: prompt=2996, completion=457, all=3453
+```
+
+**说明**
+
+- `source=api` 表示 Rerank token 来自 DashScope 官方响应字段，不是本地估算。
+- Rerank 的 `completion=0` 属于正常现象，因为 Rerank 任务主要是对候选文档打分排序，不生成自然语言正文。
+- `/trip/generate` 返回结果中会同步包含 `token_usage`，便于前端或调试工具查看本次生成成本。

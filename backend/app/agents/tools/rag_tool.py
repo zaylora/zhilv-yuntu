@@ -78,16 +78,28 @@ def _build_chat_llm():
     )
 
 
+def _extract_token_usage(response) -> dict[str, int]:
+    """从 LangChain AIMessage 中提取 token 使用量。"""
+    usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    metadata = getattr(response, "response_metadata", None) or {}
+    token_usage = metadata.get("token_usage", {})
+    if token_usage:
+        usage["prompt_tokens"] = token_usage.get("prompt_tokens", 0)
+        usage["completion_tokens"] = token_usage.get("completion_tokens", 0)
+    return usage
+
+
 def llm_rewrite_query(
     destination: str,
     preferences: list[str] | None = None,
     pace: str | None = None,
     special_notes: str | None = None,
-) -> str | None:
-    """用 LLM 把用户旅行需求改写成适合向量检索的 query。失败返回 None。"""
+) -> tuple[str | None, dict[str, int]]:
+    """用 LLM 把用户旅行需求改写成适合向量检索的 query。返回 (query, token_usage)。"""
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     llm = _build_chat_llm()
     if llm is None:
-        return None
+        return None, empty_usage
 
     system_prompt = (
         "你是一个 RAG 检索 query 改写专家。"
@@ -113,6 +125,7 @@ def llm_rewrite_query(
             ("system", system_prompt),
             ("human", human_prompt),
         ])
+        token_usage = _extract_token_usage(response)
         raw_text = getattr(response, "content", "")
         if isinstance(raw_text, list):
             raw_text = "".join(
@@ -122,11 +135,11 @@ def llm_rewrite_query(
         query = raw_text.strip()
         if query:
             logger.info("llm_rewrite_query: input=%s -> output=%s", human_prompt, query)
-            return query
+            return query, token_usage
     except Exception:
         logger.warning("llm_rewrite_query failed, falling back to rule-based", exc_info=True)
 
-    return None
+    return None, empty_usage
 
 
 def _rule_based_query(
@@ -159,16 +172,16 @@ def build_destination_query(
     preferences: list[str] | None = None,
     pace: str | None = None,
     special_notes: str | None = None,
-) -> str:
-    """把目的地、偏好、节奏和备注改写成更贴近检索场景的 query。优先 LLM，fallback 规则级。"""
-    llm_query = llm_rewrite_query(
+) -> tuple[str, dict[str, int]]:
+    """把目的地、偏好、节奏和备注改写成更贴近检索场景的 query。返回 (query, token_usage)。"""
+    llm_query, token_usage = llm_rewrite_query(
         destination=destination,
         preferences=preferences,
         pace=pace,
         special_notes=special_notes,
     )
     if llm_query:
-        return llm_query
+        return llm_query, token_usage
 
     logger.info("build_destination_query: LLM rewrite unavailable, using rule-based")
     return _rule_based_query(
@@ -176,7 +189,7 @@ def build_destination_query(
         preferences=preferences,
         pace=pace,
         special_notes=special_notes,
-    )
+    ), {"prompt_tokens": 0, "completion_tokens": 0}
 
 
 def _build_destination_query(
@@ -184,7 +197,7 @@ def _build_destination_query(
     preferences: list[str] | None = None,
     pace: str | None = None,
     special_notes: str | None = None,
-) -> str:
+) -> tuple[str, dict[str, int]]:
     """兼容旧调用，内部转到公开的 query 构造函数。"""
     return build_destination_query(
         destination=destination,
@@ -200,12 +213,13 @@ def get_destination_guide_context(
     pace: str | None = None,
     special_notes: str | None = None,
     top_k: int = 5,
-) -> list[str]:
-    """根据目的地和偏好返回本地攻略里的相关片段。"""
-    query = build_destination_query(
+) -> tuple[list[str], dict[str, int], dict[str, int]]:
+    """根据目的地和偏好返回本地攻略里的相关片段。返回 (contexts, rewrite_token_usage, rerank_token_usage)。"""
+    query, rewrite_usage = build_destination_query(
         destination=destination,
         preferences=preferences,
         pace=pace,
         special_notes=special_notes,
     )
-    return retrieve_travel_guide(query=query, top_k=top_k)
+    contexts, rerank_usage = retrieve_travel_guide(query=query, top_k=top_k)
+    return contexts, rewrite_usage, rerank_usage

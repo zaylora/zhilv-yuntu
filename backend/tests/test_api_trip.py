@@ -77,7 +77,7 @@ def test_health_endpoint_returns_ok_status() -> None:
 
 def test_edit_trip_returns_updated_itinerary_successfully(monkeypatch) -> None:
     """测试 POST /trip/edit 能返回已修改的 itinerary。"""
-    monkeypatch.setattr(trip_service, "generate_day_edit_draft", lambda request, target_day: None)
+    monkeypatch.setattr(trip_service, "generate_day_edit_draft", lambda request, target_day: (None, {"prompt_tokens": 0, "completion_tokens": 0}))
 
     generated_response = client.post("/trip/generate", json=build_generate_payload())
     generated_itinerary = generated_response.json()

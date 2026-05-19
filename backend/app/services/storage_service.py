@@ -2,7 +2,15 @@ import json
 
 from app.config import SessionLocal, engine
 from app.models.db_models import TripRecord
-from app.models.schemas import Itinerary, TripDetailResponse, TripListResponse, TripSummaryItem
+from app.models.schemas import (
+    Itinerary,
+    TokenStatsResponse,
+    TokenUsage,
+    TripDetailResponse,
+    TripListResponse,
+    TripSummaryItem,
+    TripTokenStatsItem,
+)
 
 
 def init_db() -> None:
@@ -94,6 +102,50 @@ def list_saved_itineraries() -> TripListResponse:
             for record in records
         ]
         return TripListResponse(total=len(items), items=items)
+    finally:
+        session.close()
+
+
+def get_token_stats() -> TokenStatsResponse:
+    """统计所有已保存行程的 token 消耗。"""
+    init_db()
+
+    session = SessionLocal()
+    try:
+        records = (
+            session.query(TripRecord)
+            .order_by(TripRecord.updated_at.desc(), TripRecord.id.desc())
+            .all()
+        )
+
+        items: list[TripTokenStatsItem] = []
+        total_prompt = 0
+        total_completion = 0
+
+        for record in records:
+            itinerary_data = json.loads(record.itinerary_json)
+            itinerary = Itinerary(**itinerary_data)
+            usage = itinerary.token_usage
+            if usage is None:
+                usage = TokenUsage()
+
+            items.append(
+                TripTokenStatsItem(
+                    trip_id=record.trip_id,
+                    destination=record.destination,
+                    token_usage=usage,
+                )
+            )
+            total_prompt += usage.total_prompt_tokens
+            total_completion += usage.total_completion_tokens
+
+        return TokenStatsResponse(
+            trip_count=len(items),
+            total_prompt_tokens=total_prompt,
+            total_completion_tokens=total_completion,
+            total_tokens=total_prompt + total_completion,
+            items=items,
+        )
     finally:
         session.close()
 

@@ -41,7 +41,7 @@ def _count_keyword_hits(text: str, keywords: list[str]) -> int:
 def _evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
     top_k = int(case.get("top_k", 5))
     destination = str(case["destination"])
-    query = build_destination_query(
+    query, _ = build_destination_query(
         destination=destination,
         preferences=list(case.get("preferences", [])),
         pace=case.get("pace"),
@@ -49,7 +49,7 @@ def _evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
     )
 
     start_time = time.perf_counter()
-    chunks = retrieve_travel_guide_chunks(query=query, top_k=top_k, destination=destination)
+    chunks, _ = retrieve_travel_guide_chunks(query=query, top_k=top_k, destination=destination)
     latency_ms = round((time.perf_counter() - start_time) * 1000, 1)
 
     expected_title_keywords = list(case.get("expected_title_keywords", []))

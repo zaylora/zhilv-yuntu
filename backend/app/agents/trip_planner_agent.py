@@ -100,8 +100,8 @@ def collect_trip_context(
     pace: str | None = None,
     special_notes: str | None = None,
     top_k: int = 5,
-) -> list[str]:
-    """收集生成行程时需要参考的本地攻略片段。"""
+) -> tuple[list[str], dict[str, int], dict[str, int]]:
+    """收集生成行程时需要参考的本地攻略片段。返回 (contexts, rewrite_token_usage, rerank_token_usage)。"""
     return get_destination_guide_context(
         destination=destination,
         preferences=preferences,
@@ -131,20 +131,32 @@ def _build_chat_llm():
     )
 
 
+def _extract_token_usage(response) -> dict[str, int]:
+    """从 LangChain AIMessage 中提取 token 使用量。"""
+    usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    metadata = getattr(response, "response_metadata", None) or {}
+    token_usage = metadata.get("token_usage", {})
+    if token_usage:
+        usage["prompt_tokens"] = token_usage.get("prompt_tokens", 0)
+        usage["completion_tokens"] = token_usage.get("completion_tokens", 0)
+    return usage
+
+
 def generate_planner_draft(
     request: TripRequest,
     rag_contexts: list[str],
     day_count: int,
-) -> PlannerDraft | None:
+) -> tuple[PlannerDraft | None, dict[str, int]]:
     """
-    使用 LangChain 生成结构化行程草稿。
+    使用 LangChain 生成结构化行程草稿。返回 (draft, token_usage)。
 
     如果当前环境还没有准备好模型调用条件，就返回 None，
     这样 service 层还能回退到规则版实现。
     """
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     llm = _build_chat_llm()
     if llm is None:
-        return None
+        return None, empty_usage
 
     guide_context = "\n\n".join(rag_contexts) if rag_contexts else "暂无本地攻略上下文。"
 
@@ -219,9 +231,10 @@ JSON 结构示例：
         )
     except Exception as exc:
         print(f"[trip_planner_agent] 大模型调用失败: {type(exc).__name__}: {exc}")
-        return None
+        return None, empty_usage
 
-    print("[trip_planner_agent] 大模型调用完成。")
+    token_usage = _extract_token_usage(response)
+    print(f"[trip_planner_agent] 大模型调用完成。token: prompt={token_usage['prompt_tokens']}, completion={token_usage['completion_tokens']}")
 
     raw_text = getattr(response, "content", "")
     if isinstance(raw_text, list):
@@ -234,38 +247,39 @@ JSON 结构示例：
     if json_text is None:
         print("[trip_planner_agent] 未能从模型返回中提取 JSON。")
         print(f"[trip_planner_agent] 原始返回预览: {str(raw_text)[:300]}")
-        return None
+        return None, token_usage
 
     try:
         result = PlannerDraft.model_validate(json.loads(json_text))
     except Exception as exc:
         print(f"[trip_planner_agent] JSON 解析失败: {type(exc).__name__}: {exc}")
         print(f"[trip_planner_agent] 原始返回预览: {str(raw_text)[:300]}")
-        return None
+        return None, token_usage
 
     if len(result.days) != day_count:
         print(
             "[trip_planner_agent] 结构化结果天数不匹配，"
             f"expected={day_count}, actual={len(result.days)}"
         )
-        return None
+        return None, token_usage
 
-    return result
+    return result, token_usage
 
 
 def generate_day_edit_draft(
     request: TripEditRequest,
     target_day: DayPlan,
-) -> DayEditDraft | None:
+) -> tuple[DayEditDraft | None, dict[str, int]]:
     """
-    使用 LLM 生成单日编辑草稿，失败时返回 None。
+    使用 LLM 生成单日编辑草稿。返回 (draft, token_usage)。
 
     这个函数只负责产出目标那一天的编辑结果，
     最终如何合并回完整 itinerary 由 service 层处理。
     """
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     llm = _build_chat_llm()
     if llm is None:
-        return None
+        return None, empty_usage
 
     current_day_payload = {
         "day_index": target_day.day_index,
@@ -327,7 +341,10 @@ JSON 结构示例：
         )
     except Exception as exc:
         print(f"[trip_planner_agent] 单日编辑调用失败: {type(exc).__name__}: {exc}")
-        return None
+        return None, empty_usage
+
+    token_usage = _extract_token_usage(response)
+    print(f"[trip_planner_agent] 单日编辑调用完成。token: prompt={token_usage['prompt_tokens']}, completion={token_usage['completion_tokens']}")
 
     raw_text = getattr(response, "content", "")
     if isinstance(raw_text, list):
@@ -340,15 +357,15 @@ JSON 结构示例：
     if json_text is None:
         print("[trip_planner_agent] 未能从单日编辑结果中提取 JSON。")
         print(f"[trip_planner_agent] 原始返回预览: {str(raw_text)[:300]}")
-        return None
+        return None, token_usage
 
     try:
         payload = json.loads(json_text)
         if not isinstance(payload, dict):
             raise ValueError("单日编辑结果不是 JSON 对象。")
         normalized_payload = _normalize_day_edit_payload(payload)
-        return DayEditDraft.model_validate(normalized_payload)
+        return DayEditDraft.model_validate(normalized_payload), token_usage
     except Exception as exc:
         print(f"[trip_planner_agent] 单日编辑 JSON 解析失败: {type(exc).__name__}: {exc}")
         print(f"[trip_planner_agent] 原始返回预览: {str(raw_text)[:300]}")
-        return None
+        return None, token_usage
