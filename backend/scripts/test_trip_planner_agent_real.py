@@ -97,7 +97,7 @@ def main() -> int:
     print(json.dumps(request.model_dump(mode="json"), ensure_ascii=False, indent=2))
     print()
 
-    rag_contexts, rewrite_usage, rerank_usage = collect_trip_context(
+    rag_contexts, rewrite_usage, rerank_usage, embedding_usage = collect_trip_context(
         destination=request.destination,
         preferences=request.preferences,
         pace=request.pace,
@@ -107,6 +107,7 @@ def main() -> int:
 
     print("=== Token 消耗 ===")
     print(f"Query Rewrite: prompt={rewrite_usage.get('prompt_tokens', 0)}, completion={rewrite_usage.get('completion_tokens', 0)}")
+    print(f"Query Embedding: prompt={embedding_usage.get('prompt_tokens', 0)}, completion={embedding_usage.get('completion_tokens', 0)}")
     print(f"Rerank: prompt={rerank_usage.get('prompt_tokens', 0)}, completion={rerank_usage.get('completion_tokens', 0)}")
     print()
 

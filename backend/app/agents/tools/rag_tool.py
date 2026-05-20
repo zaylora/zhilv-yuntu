@@ -213,13 +213,13 @@ def get_destination_guide_context(
     pace: str | None = None,
     special_notes: str | None = None,
     top_k: int = 5,
-) -> tuple[list[str], dict[str, int], dict[str, int]]:
-    """根据目的地和偏好返回本地攻略里的相关片段。返回 (contexts, rewrite_token_usage, rerank_token_usage)。"""
+) -> tuple[list[str], dict[str, int], dict[str, int], dict[str, int]]:
+    """根据目的地和偏好返回本地攻略片段。返回 (contexts, rewrite_usage, rerank_usage, embedding_usage)。"""
     query, rewrite_usage = build_destination_query(
         destination=destination,
         preferences=preferences,
         pace=pace,
         special_notes=special_notes,
     )
-    contexts, rerank_usage = retrieve_travel_guide(query=query, top_k=top_k)
-    return contexts, rewrite_usage, rerank_usage
+    contexts, rerank_usage, embedding_usage = retrieve_travel_guide(query=query, top_k=top_k)
+    return contexts, rewrite_usage, rerank_usage, embedding_usage

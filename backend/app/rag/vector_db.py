@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from hashlib import md5
 
+import httpx
+
 from app.config import (
     BACKEND_DIR,
     CHROMA_COLLECTION_NAME,
@@ -132,6 +134,69 @@ def _build_embeddings():
         )
 
 
+def _extract_embedding_token_usage(response_data: dict) -> dict[str, int]:
+    """读取 embeddings 接口返回的官方 usage；没有 usage 时保持 0。"""
+    usage = response_data.get("usage") or {}
+    prompt_tokens = (
+        usage.get("prompt_tokens")
+        or usage.get("input_tokens")
+        or usage.get("input_token_count")
+        or usage.get("total_tokens")
+        or usage.get("total_token_count")
+        or 0
+    )
+    return {
+        "prompt_tokens": int(prompt_tokens),
+        "completion_tokens": 0,
+    }
+
+
+def _embed_query_with_usage(query: str) -> tuple[list[float] | None, dict[str, int]]:
+    """在线 query embedding：优先直接调接口拿官方 usage，失败时回退 LangChain 但 usage 为 0。"""
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    if not LLM_API_KEY:
+        return None, empty_usage
+
+    base_url = (LLM_BASE_URL or "https://api.openai.com/v1").rstrip("/")
+    endpoint = f"{base_url}/embeddings"
+    payload = {
+        "model": EMBEDDING_MODEL,
+        "input": query,
+    }
+    headers = {
+        "Authorization": f"Bearer {LLM_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        with httpx.Client(timeout=30) as client:
+            response = client.post(endpoint, json=payload, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            items = data.get("data") or []
+            if items and "embedding" in items[0]:
+                usage = _extract_embedding_token_usage(data)
+                print(
+                    "[embedding] query embedding token: "
+                    f"prompt={usage['prompt_tokens']}, completion=0, source=api"
+                )
+                return items[0]["embedding"], usage
+            print(f"[embedding] embeddings response missing vector: {response.text[:500]}")
+        else:
+            print(
+                "[embedding] embeddings API failed: "
+                f"status_code={response.status_code}, response={response.text[:500]}"
+            )
+    except Exception as exc:
+        print(f"[embedding] embeddings API failed: {type(exc).__name__}: {exc}")
+
+    embeddings = _build_embeddings()
+    if embeddings is None:
+        return None, empty_usage
+    print("[embedding] fallback to LangChain embed_query; official token usage unavailable")
+    return embeddings.embed_query(query), empty_usage
+
+
 def _get_chroma_collection():
     """获取 Chroma collection。"""
     try:
@@ -186,17 +251,21 @@ def ingest_guide_chunks_to_chroma() -> int:
     return len(chunks)
 
 
-def _search_guide_chunks_by_chroma(query: str, top_k: int = 3) -> list[dict[str, str]]:
-    """优先使用 Chroma 做向量检索。"""
-    embeddings = _build_embeddings()
+def _search_guide_chunks_by_chroma(
+    query: str, top_k: int = 3
+) -> tuple[list[dict[str, str]], dict[str, int]]:
+    """优先使用 Chroma 做向量检索，并返回在线 query embedding token。"""
     collection = _get_chroma_collection()
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
 
-    if embeddings is None or collection is None:
-        return []
+    if collection is None:
+        return [], empty_usage
     if collection.count() == 0:
-        return []
+        return [], empty_usage
 
-    query_embedding = embeddings.embed_query(query)
+    query_embedding, embedding_usage = _embed_query_with_usage(query)
+    if query_embedding is None:
+        return [], empty_usage
     result = collection.query(
         query_embeddings=[query_embedding],
         n_results=top_k,
@@ -219,16 +288,25 @@ def _search_guide_chunks_by_chroma(query: str, top_k: int = 3) -> list[dict[str,
             }
         )
 
-    return matched_chunks
+    return matched_chunks, embedding_usage
 
 
-def search_guide_chunks(query: str, top_k: int = 3) -> list[dict[str, str]]:
+def search_guide_chunks_with_usage(
+    query: str, top_k: int = 3
+) -> tuple[list[dict[str, str]], dict[str, int]]:
     """
     从本地攻略片段里找最相关的 top_k 条结果。
 
     优先走 Chroma 向量检索；如果当前环境还没准备好，再回退到关键词检索。
     """
-    chroma_results = _search_guide_chunks_by_chroma(query=query, top_k=top_k)
+    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    chroma_results, embedding_usage = _search_guide_chunks_by_chroma(query=query, top_k=top_k)
     if chroma_results:
-        return chroma_results
-    return _search_guide_chunks_by_keywords(query=query, top_k=top_k)
+        return chroma_results, embedding_usage
+    return _search_guide_chunks_by_keywords(query=query, top_k=top_k), empty_usage
+
+
+def search_guide_chunks(query: str, top_k: int = 3) -> list[dict[str, str]]:
+    """兼容旧调用：只返回检索片段，不返回 token usage。"""
+    chunks, _ = search_guide_chunks_with_usage(query=query, top_k=top_k)
+    return chunks

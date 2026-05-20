@@ -6,7 +6,7 @@ import re
 import httpx
 
 from app.config import LLM_API_KEY, REDIS_RAG_TTL_SECONDS, REDIS_RERANK_TTL_SECONDS, RERANK_MODEL
-from app.rag.vector_db import search_guide_chunks
+from app.rag.vector_db import search_guide_chunks_with_usage
 from app.services.cache_service import get_cached_json, set_cached_json
 
 
@@ -321,26 +321,29 @@ def rerank_guide_chunks(
 
 def retrieve_travel_guide_chunks(
     query: str, top_k: int = 3, destination: str | None = None
-) -> tuple[list[dict[str, str]], dict[str, int]]:
-    """返回带轻量 rerank 的原始攻略片段。返回 (chunks, rerank_token_usage)。"""
+) -> tuple[list[dict[str, str]], dict[str, int], dict[str, int]]:
+    """返回带轻量 rerank 的原始攻略片段。返回 (chunks, rerank_usage, embedding_usage)。"""
     candidate_k = max(top_k * 2, 6)
-    matched_chunks = search_guide_chunks(query=query, top_k=candidate_k)
-    return rerank_guide_chunks(
+    matched_chunks, embedding_usage = search_guide_chunks_with_usage(query=query, top_k=candidate_k)
+    reranked_chunks, rerank_usage = rerank_guide_chunks(
         query=query, matched_chunks=matched_chunks, top_k=top_k, destination=destination
     )
+    return reranked_chunks, rerank_usage, embedding_usage
 
 
-def retrieve_travel_guide(query: str, top_k: int = 3) -> tuple[list[str], dict[str, int]]:
-    """返回最相关的攻略片段。返回 (texts, rerank_token_usage)。"""
+def retrieve_travel_guide(
+    query: str, top_k: int = 3
+) -> tuple[list[str], dict[str, int], dict[str, int]]:
+    """返回最相关的攻略片段。返回 (texts, rerank_usage, embedding_usage)。"""
     empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     cache_key = f"rag:guide:{_normalize_cache_text(query)}:{top_k}"
     cached_value = get_cached_json(cache_key)
     if cached_value is not None:
         logger.info("rag cache hit: query=%s top_k=%s", query, top_k)
-        return [str(item) for item in cached_value], empty_usage
+        return [str(item) for item in cached_value], empty_usage, empty_usage
     logger.info("rag cache miss: query=%s top_k=%s", query, top_k)
 
-    matched_chunks, rerank_usage = retrieve_travel_guide_chunks(query=query, top_k=top_k)
+    matched_chunks, rerank_usage, embedding_usage = retrieve_travel_guide_chunks(query=query, top_k=top_k)
 
     results: list[str] = []
     for chunk in matched_chunks:
@@ -349,4 +352,4 @@ def retrieve_travel_guide(query: str, top_k: int = 3) -> tuple[list[str], dict[s
         )
 
     set_cached_json(cache_key, results, expire_seconds=REDIS_RAG_TTL_SECONDS)
-    return results, rerank_usage
+    return results, rerank_usage, embedding_usage

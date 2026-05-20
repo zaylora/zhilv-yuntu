@@ -49,7 +49,9 @@ def _evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
     )
 
     start_time = time.perf_counter()
-    chunks, _ = retrieve_travel_guide_chunks(query=query, top_k=top_k, destination=destination)
+    chunks, rerank_usage, embedding_usage = retrieve_travel_guide_chunks(
+        query=query, top_k=top_k, destination=destination
+    )
     latency_ms = round((time.perf_counter() - start_time) * 1000, 1)
 
     expected_title_keywords = list(case.get("expected_title_keywords", []))
@@ -99,6 +101,8 @@ def _evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
         "reciprocal_rank": reciprocal_rank,
         "pollution_count": pollution_count,
         "latency_ms": latency_ms,
+        "embedding_prompt_tokens": embedding_usage.get("prompt_tokens", 0),
+        "rerank_prompt_tokens": rerank_usage.get("prompt_tokens", 0),
         "titles": titles,
     }
 
@@ -118,6 +122,8 @@ def _print_case_result(result: dict[str, Any]) -> None:
     print(f"reciprocal_rank: {result['reciprocal_rank']:.3f}")
     print(f"pollution_count: {result['pollution_count']}")
     print(f"latency_ms: {result['latency_ms']}")
+    print(f"embedding_prompt_tokens: {result['embedding_prompt_tokens']}")
+    print(f"rerank_prompt_tokens: {result['rerank_prompt_tokens']}")
     print("titles:")
     for index, title in enumerate(result["titles"], start=1):
         print(f"  {index}. {title}")
@@ -157,6 +163,12 @@ def main() -> int:
     noise_rate = total_noise / (total * int(cases[0].get("top_k", 5))) * 100
     total_pollution = sum(int(result["pollution_count"]) for result in results)
     avg_latency = sum(result["latency_ms"] for result in results) / total
+    total_embedding_prompt_tokens = sum(
+        int(result["embedding_prompt_tokens"]) for result in results
+    )
+    total_rerank_prompt_tokens = sum(
+        int(result["rerank_prompt_tokens"]) for result in results
+    )
 
     print("=== Summary ===")
     print(f"cases: {total}")
@@ -168,6 +180,8 @@ def main() -> int:
     print(f"noise_rate: {noise_rate:.1f}%")
     print(f"cross_destination_pollution: {total_pollution}")
     print(f"avg_latency_ms: {avg_latency:.1f}")
+    print(f"embedding_prompt_tokens_total: {total_embedding_prompt_tokens}")
+    print(f"rerank_prompt_tokens_total: {total_rerank_prompt_tokens}")
     return 0
 
 

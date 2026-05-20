@@ -239,7 +239,7 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
     day_count = (request.end_date - request.start_date).days + 1
     day_count = max(day_count, 1)
 
-    rag_contexts, rewrite_usage, rerank_usage = collect_trip_context(
+    rag_contexts, rewrite_usage, rerank_usage, embedding_usage = collect_trip_context(
         destination=request.destination,
         preferences=request.preferences,
         pace=request.pace,
@@ -250,6 +250,8 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
     token_usage = TokenUsage(
         rewrite_prompt_tokens=rewrite_usage.get("prompt_tokens", 0),
         rewrite_completion_tokens=rewrite_usage.get("completion_tokens", 0),
+        embedding_prompt_tokens=embedding_usage.get("prompt_tokens", 0),
+        embedding_completion_tokens=embedding_usage.get("completion_tokens", 0),
         planner_prompt_tokens=planner_usage.get("prompt_tokens", 0),
         planner_completion_tokens=planner_usage.get("completion_tokens", 0),
         rerank_prompt_tokens=rerank_usage.get("prompt_tokens", 0),
@@ -264,6 +266,11 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
         "[token_usage] Rerank: "
         f"prompt={token_usage.rerank_prompt_tokens}, "
         f"completion={token_usage.rerank_completion_tokens}"
+    )
+    print(
+        "[token_usage] Query Embedding: "
+        f"prompt={token_usage.embedding_prompt_tokens}, "
+        f"completion={token_usage.embedding_completion_tokens}"
     )
     print(
         "[token_usage] Planner: "

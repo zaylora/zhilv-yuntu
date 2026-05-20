@@ -122,6 +122,8 @@ class TokenUsage(BaseModel):
 
     rewrite_prompt_tokens: int = Field(default=0, ge=0, description="Query Rewrite 输入 token")
     rewrite_completion_tokens: int = Field(default=0, ge=0, description="Query Rewrite 输出 token")
+    embedding_prompt_tokens: int = Field(default=0, ge=0, description="Query Embedding 输入 token")
+    embedding_completion_tokens: int = Field(default=0, ge=0, description="Query Embedding 输出 token")
     planner_prompt_tokens: int = Field(default=0, ge=0, description="行程生成输入 token")
     planner_completion_tokens: int = Field(default=0, ge=0, description="行程生成输出 token")
     rerank_prompt_tokens: int = Field(default=0, ge=0, description="Rerank 输入 token")
@@ -129,11 +131,21 @@ class TokenUsage(BaseModel):
 
     @property
     def total_prompt_tokens(self) -> int:
-        return self.rewrite_prompt_tokens + self.planner_prompt_tokens + self.rerank_prompt_tokens
+        return (
+            self.rewrite_prompt_tokens
+            + self.embedding_prompt_tokens
+            + self.planner_prompt_tokens
+            + self.rerank_prompt_tokens
+        )
 
     @property
     def total_completion_tokens(self) -> int:
-        return self.rewrite_completion_tokens + self.planner_completion_tokens + self.rerank_completion_tokens
+        return (
+            self.rewrite_completion_tokens
+            + self.embedding_completion_tokens
+            + self.planner_completion_tokens
+            + self.rerank_completion_tokens
+        )
 
     @property
     def total_tokens(self) -> int:

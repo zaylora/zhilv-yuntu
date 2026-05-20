@@ -52,7 +52,7 @@ def main() -> int:
         pace=args.pace or None,
         special_notes=args.special_notes or None,
     )
-    matched_chunks, _ = retrieve_travel_guide_chunks(query=query, top_k=args.top_k)
+    matched_chunks, rerank_usage, embedding_usage = retrieve_travel_guide_chunks(query=query, top_k=args.top_k)
 
     print("=== RAG 检索调试 ===")
     print(f"destination: {args.destination}")
@@ -63,6 +63,18 @@ def main() -> int:
     print()
     print("=== 检索 Query ===")
     print(query)
+    print()
+    print("=== 在线 Token 消耗 ===")
+    print(
+        "Query Embedding: "
+        f"prompt={embedding_usage.get('prompt_tokens', 0)}, "
+        f"completion={embedding_usage.get('completion_tokens', 0)}"
+    )
+    print(
+        "Rerank: "
+        f"prompt={rerank_usage.get('prompt_tokens', 0)}, "
+        f"completion={rerank_usage.get('completion_tokens', 0)}"
+    )
     print()
 
     if not matched_chunks:

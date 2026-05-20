@@ -100,8 +100,8 @@ def collect_trip_context(
     pace: str | None = None,
     special_notes: str | None = None,
     top_k: int = 5,
-) -> tuple[list[str], dict[str, int], dict[str, int]]:
-    """收集生成行程时需要参考的本地攻略片段。返回 (contexts, rewrite_token_usage, rerank_token_usage)。"""
+) -> tuple[list[str], dict[str, int], dict[str, int], dict[str, int]]:
+    """收集本地攻略片段。返回 (contexts, rewrite_usage, rerank_usage, embedding_usage)。"""
     return get_destination_guide_context(
         destination=destination,
         preferences=preferences,

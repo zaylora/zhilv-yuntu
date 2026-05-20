@@ -99,7 +99,12 @@ def test_collect_trip_context_calls_rag_tool_with_expected_arguments(monkeypatch
         captured["pace"] = pace
         captured["special_notes"] = special_notes
         captured["top_k"] = top_k
-        return ["攻略片段 1", "攻略片段 2"], {"prompt_tokens": 0, "completion_tokens": 0}, {"prompt_tokens": 0, "completion_tokens": 0}
+        return (
+            ["攻略片段 1", "攻略片段 2"],
+            {"prompt_tokens": 0, "completion_tokens": 0},
+            {"prompt_tokens": 0, "completion_tokens": 0},
+            {"prompt_tokens": 0, "completion_tokens": 0},
+        )
 
     monkeypatch.setattr(
         trip_planner_agent,
@@ -107,7 +112,7 @@ def test_collect_trip_context_calls_rag_tool_with_expected_arguments(monkeypatch
         fake_get_destination_guide_context,
     )
 
-    results, _, _ = trip_planner_agent.collect_trip_context(
+    results, _, _, _ = trip_planner_agent.collect_trip_context(
         "大理",
         ["美食", "拍照"],
         pace="轻松",
