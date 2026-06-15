@@ -1,0 +1,2415 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
+  "elements": [
+    {
+      "id": "oHBvRPOIvGrv",
+      "type": "rectangle",
+      "x": 950,
+      "y": 40,
+      "width": 340,
+      "height": 120,
+      "angle": 0,
+      "strokeColor": "#1971c2",
+      "backgroundColor": "#a5d8ff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a0",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 113971124,
+      "version": 1,
+      "versionNonce": 854001194,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "5iFlbCBFNOgm"
+        },
+        {
+          "id": "YQ7yydSbs9uy",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "5iFlbCBFNOgm",
+      "type": "text",
+      "x": 958,
+      "y": 68.5,
+      "width": 324,
+      "height": 63,
+      "angle": 0,
+      "strokeColor": "#1971c2",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a1",
+      "roundness": null,
+      "seed": 1801823909,
+      "version": 1,
+      "versionNonce": 946785249,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "① 用户输入\n城市 / 起止日期 / 人数\n旅行·住宿·饮食偏好 / 预算",
+      "fontSize": 17,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "oHBvRPOIvGrv",
+      "originalText": "① 用户输入\n城市 / 起止日期 / 人数\n旅行·住宿·饮食偏好 / 预算",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "clRz3AwzKsbV",
+      "type": "rectangle",
+      "x": 950,
+      "y": 230,
+      "width": 340,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "#d0bfff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a2",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1477278578,
+      "version": 1,
+      "versionNonce": 1136108455,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "RJN9wVGFYGW2"
+        },
+        {
+          "id": "YQ7yydSbs9uy",
+          "type": "arrow"
+        },
+        {
+          "id": "MSN9DlviDvUD",
+          "type": "arrow"
+        },
+        {
+          "id": "ZH84kPlmCnFa",
+          "type": "arrow"
+        },
+        {
+          "id": "NqtUPQZIqpTd",
+          "type": "arrow"
+        },
+        {
+          "id": "AdnkGEiNgQI7",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "RJN9wVGFYGW2",
+      "type": "text",
+      "x": 958,
+      "y": 264,
+      "width": 324,
+      "height": 42,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a3",
+      "roundness": null,
+      "seed": 186618212,
+      "version": 1,
+      "versionNonce": 1973214823,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "② 任务派发 Agent\n需求标准化改写 + 并行派发",
+      "fontSize": 17,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "clRz3AwzKsbV",
+      "originalText": "② 任务派发 Agent\n需求标准化改写 + 并行派发",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "iH_7YFjS1on4",
+      "type": "rectangle",
+      "x": 635,
+      "y": 430,
+      "width": 220,
+      "height": 150,
+      "angle": 0,
+      "strokeColor": "#0c8599",
+      "backgroundColor": "#99e9f2",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a4",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 999829241,
+      "version": 1,
+      "versionNonce": 433797841,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "3XkMtECqOxSF"
+        },
+        {
+          "id": "MSN9DlviDvUD",
+          "type": "arrow"
+        },
+        {
+          "id": "4PXSKc1itTn_",
+          "type": "arrow"
+        },
+        {
+          "id": "tbAh7ziru8vv",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "3XkMtECqOxSF",
+      "type": "text",
+      "x": 643,
+      "y": 477,
+      "width": 204,
+      "height": 56,
+      "angle": 0,
+      "strokeColor": "#0c8599",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a5",
+      "roundness": null,
+      "seed": 1632629720,
+      "version": 1,
+      "versionNonce": 1193887546,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "③d 天气查询 Agent\n获取预报；远期自动\n降级为季节/历史气候",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "iH_7YFjS1on4",
+      "originalText": "③d 天气查询 Agent\n获取预报；远期自动\n降级为季节/历史气候",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "do1XKXWNqRs7",
+      "type": "rectangle",
+      "x": 885,
+      "y": 430,
+      "width": 220,
+      "height": 150,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "#b2f2bb",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a6",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1159417076,
+      "version": 1,
+      "versionNonce": 943239975,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "rpEmoKiuPKdY"
+        },
+        {
+          "id": "ZH84kPlmCnFa",
+          "type": "arrow"
+        },
+        {
+          "id": "SmNtVNro2Qgf",
+          "type": "arrow"
+        },
+        {
+          "id": "uyUbm_gHY5kM",
+          "type": "arrow"
+        },
+        {
+          "id": "bE8q6VnUq2Hu",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "rpEmoKiuPKdY",
+      "type": "text",
+      "x": 893,
+      "y": 467.5,
+      "width": 204,
+      "height": 75,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a7",
+      "roundness": null,
+      "seed": 1392783744,
+      "version": 1,
+      "versionNonce": 240251662,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "③a 游玩地检索 Agent\n候选景点 + 坐标\n（不够则补搜，\n有退出条件）",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "do1XKXWNqRs7",
+      "originalText": "③a 游玩地检索 Agent\n候选景点 + 坐标\n（不够则补搜，\n有退出条件）",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "O0CzUZREN68k",
+      "type": "rectangle",
+      "x": 1135,
+      "y": 430,
+      "width": 220,
+      "height": 150,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "#b2f2bb",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a8",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1137651679,
+      "version": 1,
+      "versionNonce": 599707678,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "4tUNpfZ46pdJ"
+        },
+        {
+          "id": "NqtUPQZIqpTd",
+          "type": "arrow"
+        },
+        {
+          "id": "Fob1RCAVxIo_",
+          "type": "arrow"
+        },
+        {
+          "id": "qaUZsSjIMaq8",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "4tUNpfZ46pdJ",
+      "type": "text",
+      "x": 1143,
+      "y": 477,
+      "width": 204,
+      "height": 56,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a9",
+      "roundness": null,
+      "seed": 1059257081,
+      "version": 1,
+      "versionNonce": 1128466621,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "③b 餐饮检索 Agent\n按饮食偏好搜集\n候选餐厅池",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "O0CzUZREN68k",
+      "originalText": "③b 餐饮检索 Agent\n按饮食偏好搜集\n候选餐厅池",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "vlb5lZXOIgfF",
+      "type": "rectangle",
+      "x": 1385,
+      "y": 430,
+      "width": 220,
+      "height": 150,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "#b2f2bb",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aA",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1652563014,
+      "version": 1,
+      "versionNonce": 1639042339,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "wD3HJoKyrbmE"
+        },
+        {
+          "id": "AdnkGEiNgQI7",
+          "type": "arrow"
+        },
+        {
+          "id": "vcjtbjAHE84s",
+          "type": "arrow"
+        },
+        {
+          "id": "nkTZj1ATSNby",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "wD3HJoKyrbmE",
+      "type": "text",
+      "x": 1393,
+      "y": 477,
+      "width": 204,
+      "height": 56,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aB",
+      "roundness": null,
+      "seed": 2010258947,
+      "version": 1,
+      "versionNonce": 1079815405,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "③c 交通检索 Agent\n大交通 + 市内交通\n方案",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "vlb5lZXOIgfF",
+      "originalText": "③c 交通检索 Agent\n大交通 + 市内交通\n方案",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "_j38AruHr4iw",
+      "type": "rectangle",
+      "x": 950,
+      "y": 690,
+      "width": 340,
+      "height": 140,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "#d0bfff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aC",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1131247331,
+      "version": 1,
+      "versionNonce": 767303989,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "RxpVHSbKdA9u"
+        },
+        {
+          "id": "4PXSKc1itTn_",
+          "type": "arrow"
+        },
+        {
+          "id": "SmNtVNro2Qgf",
+          "type": "arrow"
+        },
+        {
+          "id": "Fob1RCAVxIo_",
+          "type": "arrow"
+        },
+        {
+          "id": "vcjtbjAHE84s",
+          "type": "arrow"
+        },
+        {
+          "id": "1XljJbICTX57",
+          "type": "arrow"
+        },
+        {
+          "id": "zq3vzPRKysGY",
+          "type": "arrow"
+        },
+        {
+          "id": "ZVR3E9xRWpgZ",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "RxpVHSbKdA9u",
+      "type": "text",
+      "x": 958,
+      "y": 722.5,
+      "width": 324,
+      "height": 75,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aD",
+      "roundness": null,
+      "seed": 457031005,
+      "version": 1,
+      "versionNonce": 1281810601,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "④ 行程编排 Agent ★新增\n坐标聚类 → 分天 → 顺路排序\n结合天气调整(雨天换室内)\n候选餐厅按天就近分配",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "_j38AruHr4iw",
+      "originalText": "④ 行程编排 Agent ★新增\n坐标聚类 → 分天 → 顺路排序\n结合天气调整(雨天换室内)\n候选餐厅按天就近分配",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "1ogmMJXwKi9x",
+      "type": "rectangle",
+      "x": 950,
+      "y": 910,
+      "width": 340,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#0c8599",
+      "backgroundColor": "#99e9f2",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aE",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1320763136,
+      "version": 1,
+      "versionNonce": 1028439864,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "7h6AmUfBH7X4"
+        },
+        {
+          "id": "1XljJbICTX57",
+          "type": "arrow"
+        },
+        {
+          "id": "3K_zzL4aBLv7",
+          "type": "arrow"
+        },
+        {
+          "id": "ccrNgey59yvK",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "7h6AmUfBH7X4",
+      "type": "text",
+      "x": 958,
+      "y": 945,
+      "width": 324,
+      "height": 40,
+      "angle": 0,
+      "strokeColor": "#0c8599",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aF",
+      "roundness": null,
+      "seed": 248786715,
+      "version": 1,
+      "versionNonce": 1034535594,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "⑤ 住宿 Agent\n按每天活动中心点选酒店",
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "1ogmMJXwKi9x",
+      "originalText": "⑤ 住宿 Agent\n按每天活动中心点选酒店",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "4k8FFuf0E_wi",
+      "type": "rectangle",
+      "x": 950,
+      "y": 1090,
+      "width": 340,
+      "height": 120,
+      "angle": 0,
+      "strokeColor": "#e8590c",
+      "backgroundColor": "#ffd8a8",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aG",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1817363616,
+      "version": 1,
+      "versionNonce": 909666338,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "xIIqe8jKQh3m"
+        },
+        {
+          "id": "3K_zzL4aBLv7",
+          "type": "arrow"
+        },
+        {
+          "id": "zq3vzPRKysGY",
+          "type": "arrow"
+        },
+        {
+          "id": "OM06dWT0y3OO",
+          "type": "arrow"
+        },
+        {
+          "id": "ZVR3E9xRWpgZ",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "xIIqe8jKQh3m",
+      "type": "text",
+      "x": 958,
+      "y": 1122,
+      "width": 324,
+      "height": 56,
+      "angle": 0,
+      "strokeColor": "#e8590c",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aH",
+      "roundness": null,
+      "seed": 863937248,
+      "version": 1,
+      "versionNonce": 1338811291,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "⑥ 预算核算 + 校验 Agent ★新增\n门票+住宿+餐饮+交通是否超支\nschema 校验 / 缺失补偿",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "4k8FFuf0E_wi",
+      "originalText": "⑥ 预算核算 + 校验 Agent ★新增\n门票+住宿+餐饮+交通是否超支\nschema 校验 / 缺失补偿",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "ZqpXc5hcHPOE",
+      "type": "rectangle",
+      "x": 950,
+      "y": 1290,
+      "width": 340,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#e03131",
+      "backgroundColor": "#ffc9c9",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aI",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 983297493,
+      "version": 1,
+      "versionNonce": 289482183,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "VBljOlOAEtoD"
+        },
+        {
+          "id": "OM06dWT0y3OO",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "VBljOlOAEtoD",
+      "type": "text",
+      "x": 958,
+      "y": 1315,
+      "width": 324,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#e03131",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aJ",
+      "roundness": null,
+      "seed": 134917628,
+      "version": 1,
+      "versionNonce": 1419179581,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "⑦ 汇总 Agent\n按已排好的结构写每天攻略\n→ 输出最终攻略",
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "ZqpXc5hcHPOE",
+      "originalText": "⑦ 汇总 Agent\n按已排好的结构写每天攻略\n→ 输出最终攻略",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "EgPRqfNiIu74",
+      "type": "rectangle",
+      "x": 330,
+      "y": 440,
+      "width": 250,
+      "height": 90,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "#e9ecef",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aK",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1851350740,
+      "version": 1,
+      "versionNonce": 1521696480,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "kkePyezaMGGq"
+        },
+        {
+          "id": "tbAh7ziru8vv",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "kkePyezaMGGq",
+      "type": "text",
+      "x": 338,
+      "y": 476,
+      "width": 234,
+      "height": 18,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aL",
+      "roundness": null,
+      "seed": 1819256338,
+      "version": 1,
+      "versionNonce": 1765670845,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "工具：高德天气 API",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "EgPRqfNiIu74",
+      "originalText": "工具：高德天气 API",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "d3uDrp_pGDZu",
+      "type": "rectangle",
+      "x": 1699.5800065226988,
+      "y": 656.1762869127762,
+      "width": 260,
+      "height": 150,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "#e9ecef",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aM",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1196342298,
+      "version": 245,
+      "versionNonce": 1938537082,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "Vz3GPMMicIbL"
+        },
+        {
+          "id": "bE8q6VnUq2Hu",
+          "type": "arrow"
+        },
+        {
+          "id": "qaUZsSjIMaq8",
+          "type": "arrow"
+        },
+        {
+          "id": "nkTZj1ATSNby",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781538126898,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "Vz3GPMMicIbL",
+      "type": "text",
+      "x": 1707.5800065226988,
+      "y": 703.1762869127762,
+      "width": 244,
+      "height": 56,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aN",
+      "roundness": null,
+      "seed": 1072910528,
+      "version": 245,
+      "versionNonce": 1843551034,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781538126898,
+      "link": null,
+      "locked": false,
+      "text": "工具：上网搜索 /\n大众点评 /\n高德地图 API",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "d3uDrp_pGDZu",
+      "originalText": "工具：上网搜索 /\n大众点评 /\n高德地图 API",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "cz32jGDpi1A_",
+      "type": "rectangle",
+      "x": 1380,
+      "y": 905,
+      "width": 250,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "#e9ecef",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aO",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 251837137,
+      "version": 1,
+      "versionNonce": 707111049,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "F7w2PKafeN3Z"
+        },
+        {
+          "id": "ccrNgey59yvK",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "F7w2PKafeN3Z",
+      "type": "text",
+      "x": 1388,
+      "y": 941.5,
+      "width": 234,
+      "height": 37,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aP",
+      "roundness": null,
+      "seed": 1627677156,
+      "version": 1,
+      "versionNonce": 9257256,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "工具：高德地图 API\n(POI / 周边搜索)",
+      "fontSize": 15,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "cz32jGDpi1A_",
+      "originalText": "工具：高德地图 API\n(POI / 周边搜索)",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "YQ7yydSbs9uy",
+      "type": "arrow",
+      "x": 1120,
+      "y": 160,
+      "width": 0,
+      "height": 70,
+      "angle": 0,
+      "strokeColor": "#343a40",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aQ",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 2090237818,
+      "version": 1,
+      "versionNonce": 664847320,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          70
+        ]
+      ],
+      "startBinding": {
+        "elementId": "oHBvRPOIvGrv",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "clRz3AwzKsbV",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "MSN9DlviDvUD",
+      "type": "arrow",
+      "x": 1120,
+      "y": 340,
+      "width": 375,
+      "height": 90,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aR",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 215359683,
+      "version": 1,
+      "versionNonce": 2047791083,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "g62hKD9gF2LE"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -375,
+          90
+        ]
+      ],
+      "startBinding": {
+        "elementId": "clRz3AwzKsbV",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "iH_7YFjS1on4",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "g62hKD9gF2LE",
+      "type": "text",
+      "x": 904.5,
+      "y": 373,
+      "width": 64,
+      "height": 24,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "#ffffff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aS",
+      "roundness": null,
+      "seed": 291889681,
+      "version": 1,
+      "versionNonce": 1010193047,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "并行派发",
+      "fontSize": 14,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "MSN9DlviDvUD",
+      "originalText": "并行派发",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "ZH84kPlmCnFa",
+      "type": "arrow",
+      "x": 1120,
+      "y": 340,
+      "width": 125,
+      "height": 90,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aT",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1358798144,
+      "version": 1,
+      "versionNonce": 1119980131,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -125,
+          90
+        ]
+      ],
+      "startBinding": {
+        "elementId": "clRz3AwzKsbV",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "do1XKXWNqRs7",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "NqtUPQZIqpTd",
+      "type": "arrow",
+      "x": 1120,
+      "y": 340,
+      "width": 125,
+      "height": 90,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aU",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1357970699,
+      "version": 1,
+      "versionNonce": 311570308,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          125,
+          90
+        ]
+      ],
+      "startBinding": {
+        "elementId": "clRz3AwzKsbV",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "O0CzUZREN68k",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "AdnkGEiNgQI7",
+      "type": "arrow",
+      "x": 1120,
+      "y": 340,
+      "width": 375,
+      "height": 90,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aV",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1498981530,
+      "version": 1,
+      "versionNonce": 295456420,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          375,
+          90
+        ]
+      ],
+      "startBinding": {
+        "elementId": "clRz3AwzKsbV",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "vlb5lZXOIgfF",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "4PXSKc1itTn_",
+      "type": "arrow",
+      "x": 745,
+      "y": 580,
+      "width": 375,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#0c8599",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aW",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 33599985,
+      "version": 1,
+      "versionNonce": 1285821931,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "7qG84IQH4Gvj"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          375,
+          110
+        ]
+      ],
+      "startBinding": {
+        "elementId": "iH_7YFjS1on4",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "_j38AruHr4iw",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "7qG84IQH4Gvj",
+      "type": "text",
+      "x": 890.5,
+      "y": 623,
+      "width": 96,
+      "height": 24,
+      "angle": 0,
+      "strokeColor": "#0c8599",
+      "backgroundColor": "#ffffff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aX",
+      "roundness": null,
+      "seed": 667643691,
+      "version": 1,
+      "versionNonce": 1169726682,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "天气影响排程",
+      "fontSize": 14,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "4PXSKc1itTn_",
+      "originalText": "天气影响排程",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "SmNtVNro2Qgf",
+      "type": "arrow",
+      "x": 995,
+      "y": 580,
+      "width": 125,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aY",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1078557554,
+      "version": 1,
+      "versionNonce": 218179600,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          125,
+          110
+        ]
+      ],
+      "startBinding": {
+        "elementId": "do1XKXWNqRs7",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "_j38AruHr4iw",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "Fob1RCAVxIo_",
+      "type": "arrow",
+      "x": 1245,
+      "y": 580,
+      "width": 125,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aZ",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1125089310,
+      "version": 1,
+      "versionNonce": 693989312,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -125,
+          110
+        ]
+      ],
+      "startBinding": {
+        "elementId": "O0CzUZREN68k",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "_j38AruHr4iw",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "vcjtbjAHE84s",
+      "type": "arrow",
+      "x": 1495,
+      "y": 580,
+      "width": 375,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aa",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 640183292,
+      "version": 1,
+      "versionNonce": 154739679,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -375,
+          110
+        ]
+      ],
+      "startBinding": {
+        "elementId": "vlb5lZXOIgfF",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "_j38AruHr4iw",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "1XljJbICTX57",
+      "type": "arrow",
+      "x": 1120,
+      "y": 830,
+      "width": 0,
+      "height": 80,
+      "angle": 0,
+      "strokeColor": "#343a40",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ab",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 171347176,
+      "version": 1,
+      "versionNonce": 1536778951,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "NrPqGWxj43a_"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          80
+        ]
+      ],
+      "startBinding": {
+        "elementId": "_j38AruHr4iw",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "1ogmMJXwKi9x",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "NrPqGWxj43a_",
+      "type": "text",
+      "x": 1071,
+      "y": 858,
+      "width": 112,
+      "height": 24,
+      "angle": 0,
+      "strokeColor": "#343a40",
+      "backgroundColor": "#ffffff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ac",
+      "roundness": null,
+      "seed": 663801534,
+      "version": 1,
+      "versionNonce": 1016779085,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "每天活动中心点",
+      "fontSize": 14,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "1XljJbICTX57",
+      "originalText": "每天活动中心点",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "3K_zzL4aBLv7",
+      "type": "arrow",
+      "x": 1120,
+      "y": 1020,
+      "width": 0,
+      "height": 70,
+      "angle": 0,
+      "strokeColor": "#343a40",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ad",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1426725703,
+      "version": 1,
+      "versionNonce": 1768294571,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          70
+        ]
+      ],
+      "startBinding": {
+        "elementId": "1ogmMJXwKi9x",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "4k8FFuf0E_wi",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "zq3vzPRKysGY",
+      "type": "arrow",
+      "x": 1290,
+      "y": 760,
+      "width": 50,
+      "height": 405,
+      "angle": 0,
+      "strokeColor": "#6741d9",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ae",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 166320907,
+      "version": 1,
+      "versionNonce": 2021598246,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          50,
+          -15
+        ],
+        [
+          50,
+          390
+        ],
+        [
+          0,
+          390
+        ]
+      ],
+      "startBinding": {
+        "elementId": "_j38AruHr4iw",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "4k8FFuf0E_wi",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "OM06dWT0y3OO",
+      "type": "arrow",
+      "x": 1120,
+      "y": 1210,
+      "width": 0,
+      "height": 80,
+      "angle": 0,
+      "strokeColor": "#343a40",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "af",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 101637980,
+      "version": 1,
+      "versionNonce": 829486136,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          80
+        ]
+      ],
+      "startBinding": {
+        "elementId": "4k8FFuf0E_wi",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "ZqpXc5hcHPOE",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "ZVR3E9xRWpgZ",
+      "type": "arrow",
+      "x": 950,
+      "y": 1150,
+      "width": 110,
+      "height": 390,
+      "angle": 0,
+      "strokeColor": "#e8590c",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ag",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1422277849,
+      "version": 1,
+      "versionNonce": 118543409,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "H4_QLl9_QCGm"
+        }
+      ],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -110,
+          0
+        ],
+        [
+          -110,
+          -390
+        ],
+        [
+          0,
+          -390
+        ]
+      ],
+      "startBinding": {
+        "elementId": "4k8FFuf0E_wi",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "_j38AruHr4iw",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "H4_QLl9_QCGm",
+      "type": "text",
+      "x": 901,
+      "y": 943,
+      "width": 112,
+      "height": 24,
+      "angle": 0,
+      "strokeColor": "#e8590c",
+      "backgroundColor": "#ffffff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ah",
+      "roundness": null,
+      "seed": 1866437133,
+      "version": 1,
+      "versionNonce": 1484714821,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "超支则回退重排",
+      "fontSize": 14,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "ZVR3E9xRWpgZ",
+      "originalText": "超支则回退重排",
+      "autoResize": false,
+      "lineHeight": 1.25
+    },
+    {
+      "id": "uyUbm_gHY5kM",
+      "type": "arrow",
+      "x": 1075,
+      "y": 430,
+      "width": 150,
+      "height": 50,
+      "angle": 0,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ai",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1094024845,
+      "version": 1,
+      "versionNonce": 190638699,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          55,
+          -50
+        ],
+        [
+          -95,
+          -50
+        ],
+        [
+          -40,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "do1XKXWNqRs7",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "do1XKXWNqRs7",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "tbAh7ziru8vv",
+      "type": "arrow",
+      "x": 580,
+      "y": 485,
+      "width": 55,
+      "height": 20,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aj",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 846259451,
+      "version": 1,
+      "versionNonce": 1564319319,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          55,
+          20
+        ]
+      ],
+      "startBinding": {
+        "elementId": "EgPRqfNiIu74",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "iH_7YFjS1on4",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "bE8q6VnUq2Hu",
+      "type": "arrow",
+      "x": 1697.8524487209017,
+      "y": 695.5117983828864,
+      "width": 591.204364872503,
+      "height": 160.21782561191856,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ak",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1289874321,
+      "version": 245,
+      "versionNonce": 1311171578,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781538126898,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -591.204364872503,
+          -160.21782561191856
+        ]
+      ],
+      "startBinding": {
+        "elementId": "d3uDrp_pGDZu",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "do1XKXWNqRs7",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "qaUZsSjIMaq8",
+      "type": "arrow",
+      "x": 1698.2464600689746,
+      "y": 680.4609048135899,
+      "width": 341.5983762205758,
+      "height": 132.16678878449545,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "al",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1628416576,
+      "version": 245,
+      "versionNonce": 1851544762,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781538126898,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -341.5983762205758,
+          -132.16678878449545
+        ]
+      ],
+      "startBinding": {
+        "elementId": "d3uDrp_pGDZu",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "O0CzUZREN68k",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "nkTZj1ATSNby",
+      "type": "arrow",
+      "x": 1718.2573594674875,
+      "y": 656.4674033682613,
+      "width": 121.16527062740101,
+      "height": 81.91653108609614,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "am",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 1384049915,
+      "version": 245,
+      "versionNonce": 1881517434,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781538126898,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -121.16527062740101,
+          -81.91653108609614
+        ]
+      ],
+      "startBinding": {
+        "elementId": "d3uDrp_pGDZu",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "vlb5lZXOIgfF",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "ccrNgey59yvK",
+      "type": "arrow",
+      "x": 1380,
+      "y": 960,
+      "width": 90,
+      "height": 5,
+      "angle": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "an",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 364194057,
+      "version": 1,
+      "versionNonce": 1218853329,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -90,
+          5
+        ]
+      ],
+      "startBinding": {
+        "elementId": "cz32jGDpi1A_",
+        "focus": 0,
+        "gap": 2
+      },
+      "endBinding": {
+        "elementId": "1ogmMJXwKi9x",
+        "focus": 0,
+        "gap": 2
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "lastCommittedPoint": null
+    },
+    {
+      "id": "gqonVF08wPrT",
+      "type": "text",
+      "x": 950,
+      "y": -40,
+      "width": 600,
+      "height": 36,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "ao",
+      "roundness": null,
+      "seed": 964824320,
+      "version": 1,
+      "versionNonce": 855256553,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1781537149297,
+      "link": null,
+      "locked": false,
+      "text": "旅游攻略 Agent 编排（改进版）",
+      "fontSize": 28,
+      "fontFamily": 5,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "旅游攻略 Agent 编排（改进版）",
+      "autoResize": false,
+      "lineHeight": 1.25
+    }
+  ],
+  "appState": {
+    "gridSize": 20,
+    "gridStep": 5,
+    "gridModeEnabled": false,
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}

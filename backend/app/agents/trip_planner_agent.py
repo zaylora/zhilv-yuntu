@@ -14,6 +14,40 @@ from app.config import (
 )
 from app.models.schemas import DayPlan, TripEditRequest, TripRequest
 
+# LangSmith 监控：带 import 守卫，未安装/未开启时降级为空操作，绝不影响业务。
+try:
+    from langsmith import traceable
+except ImportError:  # pragma: no cover - langsmith 不在环境中
+    def traceable(*_args, **_kwargs):
+        def decorator(func):
+            return func
+
+        return decorator
+
+try:
+    from langsmith.run_helpers import get_current_run_tree
+except ImportError:  # pragma: no cover
+
+    def get_current_run_tree():
+        return None
+
+
+def _tag_run(**fields) -> None:
+    """给当前 LangSmith run 追加 metadata（如 outcome），未启用追踪时静默跳过。
+
+    fallback 率就是靠 outcome 这个维度在 LangSmith 里筛选/统计出来的。
+    """
+    try:
+        run = get_current_run_tree()
+        if run is None:
+            return
+        if hasattr(run, "add_metadata"):
+            run.add_metadata(fields)
+        else:  # 兼容旧版 RunTree
+            run.extra.setdefault("metadata", {}).update(fields)
+    except Exception:
+        pass
+
 
 class PlannerDayDraft(BaseModel):
     """LLM 返回的单日最小行程草稿。"""
@@ -142,6 +176,7 @@ def _extract_token_usage(response) -> dict[str, int]:
     return usage
 
 
+@traceable(run_type="chain", name="trip_planner.generate_planner_draft")
 def generate_planner_draft(
     request: TripRequest,
     rag_contexts: list[str],
@@ -156,6 +191,7 @@ def generate_planner_draft(
     empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     llm = _build_chat_llm()
     if llm is None:
+        _tag_run(outcome="llm_not_configured")
         return None, empty_usage
 
     guide_context = "\n\n".join(rag_contexts) if rag_contexts else "暂无本地攻略上下文。"
@@ -231,6 +267,7 @@ JSON 结构示例：
         )
     except Exception as exc:
         print(f"[trip_planner_agent] 大模型调用失败: {type(exc).__name__}: {exc}")
+        _tag_run(outcome="llm_error", error_type=type(exc).__name__)
         return None, empty_usage
 
     token_usage = _extract_token_usage(response)
@@ -247,6 +284,7 @@ JSON 结构示例：
     if json_text is None:
         print("[trip_planner_agent] 未能从模型返回中提取 JSON。")
         print(f"[trip_planner_agent] 原始返回预览: {str(raw_text)[:300]}")
+        _tag_run(outcome="json_extract_failed", **token_usage)
         return None, token_usage
 
     try:
@@ -254,6 +292,7 @@ JSON 结构示例：
     except Exception as exc:
         print(f"[trip_planner_agent] JSON 解析失败: {type(exc).__name__}: {exc}")
         print(f"[trip_planner_agent] 原始返回预览: {str(raw_text)[:300]}")
+        _tag_run(outcome="json_parse_failed", error_type=type(exc).__name__, **token_usage)
         return None, token_usage
 
     if len(result.days) != day_count:
@@ -261,11 +300,19 @@ JSON 结构示例：
             "[trip_planner_agent] 结构化结果天数不匹配，"
             f"expected={day_count}, actual={len(result.days)}"
         )
+        _tag_run(
+            outcome="day_count_mismatch",
+            expected_days=day_count,
+            actual_days=len(result.days),
+            **token_usage,
+        )
         return None, token_usage
 
+    _tag_run(outcome="success", day_count=day_count, **token_usage)
     return result, token_usage
 
 
+@traceable(run_type="chain", name="trip_planner.generate_day_edit_draft")
 def generate_day_edit_draft(
     request: TripEditRequest,
     target_day: DayPlan,
@@ -279,6 +326,7 @@ def generate_day_edit_draft(
     empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
     llm = _build_chat_llm()
     if llm is None:
+        _tag_run(outcome="llm_not_configured")
         return None, empty_usage
 
     current_day_payload = {
@@ -341,6 +389,7 @@ JSON 结构示例：
         )
     except Exception as exc:
         print(f"[trip_planner_agent] 单日编辑调用失败: {type(exc).__name__}: {exc}")
+        _tag_run(outcome="llm_error", error_type=type(exc).__name__)
         return None, empty_usage
 
     token_usage = _extract_token_usage(response)
@@ -357,6 +406,7 @@ JSON 结构示例：
     if json_text is None:
         print("[trip_planner_agent] 未能从单日编辑结果中提取 JSON。")
         print(f"[trip_planner_agent] 原始返回预览: {str(raw_text)[:300]}")
+        _tag_run(outcome="json_extract_failed", **token_usage)
         return None, token_usage
 
     try:
@@ -364,8 +414,11 @@ JSON 结构示例：
         if not isinstance(payload, dict):
             raise ValueError("单日编辑结果不是 JSON 对象。")
         normalized_payload = _normalize_day_edit_payload(payload)
-        return DayEditDraft.model_validate(normalized_payload), token_usage
+        draft = DayEditDraft.model_validate(normalized_payload)
+        _tag_run(outcome="success", **token_usage)
+        return draft, token_usage
     except Exception as exc:
         print(f"[trip_planner_agent] 单日编辑 JSON 解析失败: {type(exc).__name__}: {exc}")
         print(f"[trip_planner_agent] 原始返回预览: {str(raw_text)[:300]}")
+        _tag_run(outcome="json_parse_failed", error_type=type(exc).__name__, **token_usage)
         return None, token_usage
