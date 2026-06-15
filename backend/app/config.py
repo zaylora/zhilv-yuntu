@@ -31,21 +31,6 @@ LLM_TIMEOUT_SECONDS = int(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "1"))
 
 
-# RAG / 向量库配置
-_chroma_db_dir_raw = Path(os.getenv("CHROMA_DB_DIR", "db/chroma_db"))
-CHROMA_DB_DIR = (
-    _chroma_db_dir_raw
-    if _chroma_db_dir_raw.is_absolute()
-    else BACKEND_DIR / _chroma_db_dir_raw
-)
-CHROMA_DB_DIR.mkdir(parents=True, exist_ok=True)
-
-CHROMA_COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME", "travel_guides")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
-EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "10"))
-RERANK_MODEL = os.getenv("RERANK_MODEL", "qwen3-rerank")
-
-
 # Redis / 缓存配置
 REDIS_ENABLED = os.getenv("REDIS_ENABLED", "false").lower() == "true"
 REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
@@ -53,8 +38,6 @@ REDIS_KEY_PREFIX = os.getenv("REDIS_KEY_PREFIX", "trip_planner")
 REDIS_DEFAULT_TTL_SECONDS = int(os.getenv("REDIS_DEFAULT_TTL_SECONDS", "1800"))
 REDIS_WEATHER_TTL_SECONDS = int(os.getenv("REDIS_WEATHER_TTL_SECONDS", "1800"))
 REDIS_MAP_TTL_SECONDS = int(os.getenv("REDIS_MAP_TTL_SECONDS", "86400"))
-REDIS_RAG_TTL_SECONDS = int(os.getenv("REDIS_RAG_TTL_SECONDS", "21600"))
-REDIS_RERANK_TTL_SECONDS = int(os.getenv("REDIS_RERANK_TTL_SECONDS", "21600"))
 
 
 # 高德地图配置
@@ -63,3 +46,14 @@ AMAP_BASE_URL = os.getenv("AMAP_BASE_URL", "https://restapi.amap.com/v3")
 AMAP_DEFAULT_CITY = os.getenv("AMAP_DEFAULT_CITY", "")
 AMAP_TIMEOUT_SECONDS = int(os.getenv("AMAP_TIMEOUT_SECONDS", "20"))
 ENABLE_AMAP_ENRICHMENT = os.getenv("ENABLE_AMAP_ENRICHMENT", "false").lower() == "true"
+
+
+# Trip graph orchestration
+USE_LANGGRAPH = os.getenv("USE_LANGGRAPH", "true").lower() == "true"
+TRIP_MAX_REPLAN = int(os.getenv("TRIP_MAX_REPLAN", "2"))
+TRIP_SPOT_MIN_CANDIDATES = int(os.getenv("TRIP_SPOT_MIN_CANDIDATES", "8"))
+TRIP_SPOT_MAX_SEARCH_ROUNDS = int(os.getenv("TRIP_SPOT_MAX_SEARCH_ROUNDS", "2"))
+TRIP_ENABLE_WEB_SEARCH = os.getenv("TRIP_ENABLE_WEB_SEARCH", "false").lower() == "true"
+WEATHER_FORECAST_MAX_DAYS = int(os.getenv("WEATHER_FORECAST_MAX_DAYS", "4"))
+TRIP_METRICS_PERSIST = os.getenv("TRIP_METRICS_PERSIST", "false").lower() == "true"
+TRIP_LOG_LEVEL = os.getenv("TRIP_LOG_LEVEL", "INFO")

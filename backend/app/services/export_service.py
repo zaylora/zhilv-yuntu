@@ -9,9 +9,7 @@ from app.models.schemas import Itinerary, TripDetailResponse
 
 TECHNICAL_EXPORT_KEYWORDS = (
     "LLM",
-    "RAG",
     "LangChain",
-    "Chroma",
     "演示",
     "测试",
     "规则",

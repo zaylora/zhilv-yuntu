@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from datetime import date as DateType, timedelta
 
-from app.agents.trip_planner_agent import (
-    collect_trip_context,
-    generate_day_edit_draft,
-    generate_planner_draft,
-)
-from app.config import ENABLE_AMAP_ENRICHMENT
+from app.config import ENABLE_AMAP_ENRICHMENT, USE_LANGGRAPH
 from app.models.schemas import (
     BudgetBreakdown,
     DayPlan,
@@ -25,9 +20,7 @@ from app.services.map_service import enrich_itinerary_with_map_data
 
 TECHNICAL_TIP_KEYWORDS = (
     "LLM",
-    "RAG",
     "LangChain",
-    "Chroma",
     "演示",
     "测试",
     "规则",
@@ -35,6 +28,14 @@ TECHNICAL_TIP_KEYWORDS = (
     "源码",
     "trip_service",
 )
+
+
+def generate_day_edit_draft(
+    _request: TripEditRequest,
+    _target_day: DayPlan,
+) -> tuple[None, dict[str, int]]:
+    """Compatibility hook until the edit flow is migrated to its own graph."""
+    return None, {"prompt_tokens": 0, "completion_tokens": 0}
 
 
 def _clean_user_tips(tips: list[str], destination: str | None = None) -> list[str]:
@@ -60,19 +61,16 @@ def _clean_user_tips(tips: list[str], destination: str | None = None) -> list[st
     ]
 
 
-def _build_demo_spot_names(destination: str, rag_contexts: list[str], day_count: int) -> list[str]:
-    """从攻略片段里挑出更像样的演示景点名称。"""
-    candidate_names: list[str] = []
-    joined_context = "\n".join(rag_contexts)
-
-    if "大理古城" in joined_context:
-        candidate_names.append("大理古城")
-    if "喜洲古镇" in joined_context:
-        candidate_names.append("喜洲古镇")
-    if "崇圣寺三塔" in joined_context:
-        candidate_names.append("崇圣寺三塔")
-    if "洱海生态廊道" in joined_context:
-        candidate_names.append("洱海生态廊道")
+def _build_demo_spot_names(destination: str, day_count: int) -> list[str]:
+    """Pick deterministic fallback spots without relying on a local guide corpus."""
+    known_by_destination = {
+        "大理": ["大理古城", "喜洲古镇", "崇圣寺三塔", "洱海生态廊道"],
+        "厦门": ["鼓浪屿", "厦门园林植物园", "沙坡尾", "曾厝垵"],
+        "成都": ["宽窄巷子", "成都大熊猫繁育研究基地", "人民公园", "锦里"],
+        "西安": ["西安城墙", "陕西历史博物馆", "大雁塔", "回民街"],
+        "三亚": ["亚龙湾", "南山文化旅游区", "天涯海角", "第一市场"],
+    }
+    candidate_names = list(known_by_destination.get(destination, []))
 
     while len(candidate_names) < day_count:
         candidate_names.append(f"{destination} 推荐景点 {len(candidate_names) + 1}")
@@ -234,56 +232,15 @@ def _maybe_enrich_itinerary_with_map_data(
     return _refresh_budget_breakdown(itinerary, request_budget=request_budget)
 
 
-def generate_trip_itinerary(request: TripRequest) -> Itinerary:
-    """生成完整 itinerary，并使用更真实的预算估算方式。"""
+def _generate_trip_itinerary_legacy(request: TripRequest) -> Itinerary:
+    """生成完整 itinerary 的纯规则兜底。"""
     day_count = (request.end_date - request.start_date).days + 1
     day_count = max(day_count, 1)
 
-    rag_contexts, rewrite_usage, rerank_usage, embedding_usage = collect_trip_context(
-        destination=request.destination,
-        preferences=request.preferences,
-        pace=request.pace,
-        special_notes=request.special_notes,
-    )
-    llm_draft, planner_usage = generate_planner_draft(request, rag_contexts, day_count)
-
-    token_usage = TokenUsage(
-        rewrite_prompt_tokens=rewrite_usage.get("prompt_tokens", 0),
-        rewrite_completion_tokens=rewrite_usage.get("completion_tokens", 0),
-        embedding_prompt_tokens=embedding_usage.get("prompt_tokens", 0),
-        embedding_completion_tokens=embedding_usage.get("completion_tokens", 0),
-        planner_prompt_tokens=planner_usage.get("prompt_tokens", 0),
-        planner_completion_tokens=planner_usage.get("completion_tokens", 0),
-        rerank_prompt_tokens=rerank_usage.get("prompt_tokens", 0),
-        rerank_completion_tokens=rerank_usage.get("completion_tokens", 0),
-    )
-    print(
-        "[token_usage] Query Rewrite: "
-        f"prompt={token_usage.rewrite_prompt_tokens}, "
-        f"completion={token_usage.rewrite_completion_tokens}"
-    )
-    print(
-        "[token_usage] Rerank: "
-        f"prompt={token_usage.rerank_prompt_tokens}, "
-        f"completion={token_usage.rerank_completion_tokens}"
-    )
-    print(
-        "[token_usage] Query Embedding: "
-        f"prompt={token_usage.embedding_prompt_tokens}, "
-        f"completion={token_usage.embedding_completion_tokens}"
-    )
-    print(
-        "[token_usage] Planner: "
-        f"prompt={token_usage.planner_prompt_tokens}, "
-        f"completion={token_usage.planner_completion_tokens}"
-    )
-    print(
-        "[token_usage] Total: "
-        f"prompt={token_usage.total_prompt_tokens}, "
-        f"completion={token_usage.total_completion_tokens}, "
-        f"all={token_usage.total_tokens}"
-    )
-    fallback_spot_names = _build_demo_spot_names(request.destination, rag_contexts, day_count)
+    # The fallback stays fully local: no vector store, guide corpus, or LLM.
+    llm_draft = None
+    token_usage = TokenUsage()
+    fallback_spot_names = _build_demo_spot_names(request.destination, day_count)
 
     raw_days: list[dict[str, object]] = []
     ticket_costs: list[float] = []
@@ -299,13 +256,13 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
         spot_description = (
             llm_day.spot_description
             if llm_day is not None
-            else "根据本地攻略和旅行偏好安排，适合用半天时间慢慢游览。"
+            else "根据目的地和旅行偏好安排，适合用半天时间慢慢游览。"
         )
         meal_name = llm_day.meal_name if llm_day is not None else f"{request.destination} 特色餐饮 {day_number}"
         meal_note = (
             llm_day.meal_notes
             if llm_day is not None
-            else "根据用户偏好和本地攻略预留的一条餐饮建议。"
+            else "根据用户偏好预留的一条餐饮建议。"
         )
         daily_note = (
             llm_day.daily_note
@@ -416,9 +373,8 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
 
     preference_text = "、".join(request.preferences) if request.preferences else "常规旅行体验"
     source_notes = [
-        "Itinerary is assembled by trip_service.py and can optionally use LangChain structured output.",
+        "Itinerary is assembled by trip_service.py fallback.",
     ]
-    source_notes.extend(rag_contexts[:2])
 
     tips = (
         llm_draft.tips
@@ -428,8 +384,6 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
             "古镇、生态廊道和石板路更适合慢慢走，鞋子尽量选择舒适防滑的款式。",
         ]
     )
-    if any("骑行" in context for context in rag_contexts):
-        tips.append("本地攻略提到洱海生态廊道适合骑行，可作为第二天或第三天备选。")
     tips = _clean_user_tips(tips, request.destination)
 
     summary = (
@@ -454,6 +408,19 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
         city=request.destination,
         request_budget=request.budget,
     )
+
+
+def generate_trip_itinerary(request: TripRequest) -> Itinerary:
+    """Generate a complete itinerary through the LangGraph orchestration layer."""
+    if USE_LANGGRAPH:
+        try:
+            from app.agents.graph import run_trip_graph
+
+            return run_trip_graph(request)
+        except Exception:
+            pass
+
+    return _generate_trip_itinerary_legacy(request)
 
 
 def edit_trip_itinerary(request: TripEditRequest) -> Itinerary:

@@ -98,8 +98,8 @@ def test_edit_trip_itinerary_updates_target_day_theme(monkeypatch) -> None:
 
 
 def test_edit_trip_itinerary_can_replace_first_spot_with_free_time(monkeypatch) -> None:
-    “””测试”不要安排”指令会把景点调整成自由活动。”””
-    monkeypatch.setattr(trip_service, “generate_day_edit_draft”, lambda request, target_day: (None, {“prompt_tokens”: 0, “completion_tokens”: 0}))
+    """测试“不要安排”指令会把景点调整成自由活动。"""
+    monkeypatch.setattr(trip_service, "generate_day_edit_draft", lambda request, target_day: (None, {"prompt_tokens": 0, "completion_tokens": 0}))
     original_itinerary = generate_trip_itinerary(build_trip_request())
 
     edit_request = TripEditRequest(
@@ -149,15 +149,16 @@ def test_edit_trip_itinerary_can_apply_llm_day_edit(monkeypatch) -> None:
     assert updated_itinerary.days[1].meals[0].name == "海景下午茶"
     assert updated_itinerary.days[1].notes[-1] == "下午再出发，去双廊慢慢看日落。"
 
-def test_generate_trip_itinerary_includes_local_guide_context() -> None:
-    """测试生成结果已经开始包含本地攻略检索信息。"""
+def test_generate_trip_itinerary_includes_graph_trace_without_local_guide_context() -> None:
+    """测试生成结果来自 graph 编排，且不再依赖本地攻略检索。"""
     itinerary = generate_trip_itinerary(build_trip_request())
 
     joined_notes = "\n".join(itinerary.source_notes)
     joined_spots = "\n".join(day.spots[0].name for day in itinerary.days if day.spots)
 
     assert len(itinerary.source_notes) >= 2
-    assert "大理" in joined_notes
+    assert "graph_trace:" in joined_notes
+    assert "rag" not in joined_notes.lower()
     assert (
         "大理古城" in joined_spots
         or "喜洲古镇" in joined_spots

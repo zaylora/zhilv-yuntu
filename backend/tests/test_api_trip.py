@@ -49,6 +49,18 @@ def test_generate_trip_returns_itinerary_successfully() -> None:
     assert data["budget_breakdown"]["total"] >= 0
 
 
+def test_generate_trip_stream_returns_sse_events() -> None:
+    """测试 POST /trip/generate/stream 会返回节点事件和最终 itinerary。"""
+    response = client.post("/trip/generate/stream", json=build_generate_payload())
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert "data: " in response.text
+    assert '"type": "node"' in response.text
+    assert '"type": "done"' in response.text
+    assert '"destination": "大理"' in response.text
+
+
 def test_generate_trip_rejects_invalid_request() -> None:
     """测试非法请求会被 FastAPI/Pydantic 拦下。"""
     payload = build_generate_payload()
@@ -233,8 +245,8 @@ def test_export_trip_pdf_returns_pdf_bytes(monkeypatch) -> None:
     assert response.content.startswith(b"%PDF")
 
 
-def test_generate_trip_response_includes_rag_context() -> None:
-    """测试生成接口返回结果里包含最小 RAG 痕迹。"""
+def test_generate_trip_response_includes_graph_trace() -> None:
+    """测试生成接口返回结果里包含 graph 编排痕迹。"""
     response = client.post("/trip/generate", json=build_generate_payload())
 
     assert response.status_code == 200
@@ -242,4 +254,5 @@ def test_generate_trip_response_includes_rag_context() -> None:
     joined_notes = "\n".join(data["source_notes"])
 
     assert len(data["source_notes"]) >= 2
-    assert "大理" in joined_notes
+    assert "graph_trace:" in joined_notes
+    assert "rag" not in joined_notes.lower()

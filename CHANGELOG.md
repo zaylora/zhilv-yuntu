@@ -2,6 +2,17 @@
 
 > 这里只记录项目功能、架构和工程能力相关的更新，不记录简历、面试文档等个人整理内容。
 
+## 2026-06-16
+
+### LangGraph 多 Agent 编排重构
+
+- 新增 `agents/graph.py`、`agents/state.py`、`agents/nodes/*` 与 `agents/algorithms/*`，将行程生成拆分为 dispatch、景点候选、餐饮候选、交通、天气、编排、住宿、预算校验和汇总节点。
+- 新增节点监控装饰器，统一记录节点状态、耗时、降级原因和 `graph_trace`。
+- `trip_service.generate_trip_itinerary` 改为 graph 优先，保留纯规则兜底。
+- 新增 `/trip/generate/stream` SSE 接口，返回节点进度事件和最终 itinerary。
+- 移除本地向量检索链路：删除向量库模块、检索工具、入库/评估/调试脚本、评估样例、本地攻略 corpus 和相关重依赖。
+- 新增 graph/算法/节点/无向量链路回归测试，并修复一处测试文件里的中文弯引号语法错误。
+
 ## 2026-06-11
 
 ### Docker 容器化部署

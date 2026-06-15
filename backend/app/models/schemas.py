@@ -58,6 +58,7 @@ class SpotItem(BaseModel):
     latitude: float | None = Field(default=None, description="景点纬度")
     longitude: float | None = Field(default=None, description="景点经度")
     poi_id: str | None = Field(default=None, description="地图服务返回的 POI 标识")
+    is_indoor: bool | None = Field(default=None, description="是否更适合雨天或室内安排")
 
 
 class MealItem(BaseModel):
@@ -122,12 +123,13 @@ class TokenUsage(BaseModel):
 
     rewrite_prompt_tokens: int = Field(default=0, ge=0, description="Query Rewrite 输入 token")
     rewrite_completion_tokens: int = Field(default=0, ge=0, description="Query Rewrite 输出 token")
-    embedding_prompt_tokens: int = Field(default=0, ge=0, description="Query Embedding 输入 token")
-    embedding_completion_tokens: int = Field(default=0, ge=0, description="Query Embedding 输出 token")
+    # Historical compatibility fields. The LangGraph planner keeps these at 0.
+    embedding_prompt_tokens: int = Field(default=0, ge=0, description="历史兼容输入 token")
+    embedding_completion_tokens: int = Field(default=0, ge=0, description="历史兼容输出 token")
     planner_prompt_tokens: int = Field(default=0, ge=0, description="行程生成输入 token")
     planner_completion_tokens: int = Field(default=0, ge=0, description="行程生成输出 token")
-    rerank_prompt_tokens: int = Field(default=0, ge=0, description="Rerank 输入 token")
-    rerank_completion_tokens: int = Field(default=0, ge=0, description="Rerank 输出 token")
+    rerank_prompt_tokens: int = Field(default=0, ge=0, description="历史兼容输入 token")
+    rerank_completion_tokens: int = Field(default=0, ge=0, description="历史兼容输出 token")
 
     @property
     def total_prompt_tokens(self) -> int:
@@ -164,7 +166,7 @@ class Itinerary(BaseModel):
     tips: list[str] = Field(default_factory=list, description="旅行建议")
     source_notes: list[str] = Field(
         default_factory=list,
-        description="RAG 或规则生成产生的补充说明",
+        description="生成过程产生的补充说明",
     )
     token_usage: TokenUsage | None = Field(default=None, description="LLM token 消耗统计")
 

@@ -122,9 +122,7 @@ const mapPoints = computed(() => {
 
 const technicalTipKeywords = [
   "LLM",
-  "RAG",
   "LangChain",
-  "Chroma",
   "演示",
   "测试",
   "规则",

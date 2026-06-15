@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException
+import json
 
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
+
+from app.agents.graph import stream_trip_graph_events
 from app.models.schemas import (
     Itinerary,
     TokenStatsResponse,
@@ -32,6 +36,18 @@ def list_trips() -> TripListResponse:
 def generate_trip(request: TripRequest) -> Itinerary:
     """生成结构化 itinerary。"""
     return generate_trip_itinerary(request)
+
+
+@router.post("/generate/stream")
+def generate_trip_stream(request: TripRequest) -> StreamingResponse:
+    """以 SSE 形式返回 graph 节点进度，最后返回完整 itinerary。"""
+
+    def event_stream():
+        for event in stream_trip_graph_events(request):
+            payload = json.dumps(event, ensure_ascii=False)
+            yield f"data: {payload}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 @router.get("/stats", response_model=TokenStatsResponse)

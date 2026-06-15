@@ -31,6 +31,7 @@ export interface SpotItem {
   latitude?: number | null;
   longitude?: number | null;
   poi_id?: string | null;
+  is_indoor?: boolean | null;
 }
 
 export interface MealItem {
