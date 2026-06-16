@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import uuid
 
 from fastapi.testclient import TestClient
 
@@ -256,3 +257,28 @@ def test_generate_trip_response_includes_graph_trace() -> None:
     assert len(data["source_notes"]) >= 2
     assert "graph_trace:" in joined_notes
     assert "rag" not in joined_notes.lower()
+
+
+def test_trip_stats_returns_saved_planner_usage() -> None:
+    """测试 /trip/stats 会统计保存行程中的 planner token。"""
+    generated_response = client.post("/trip/generate", json=build_generate_payload())
+    generated_itinerary = generated_response.json()
+    generated_itinerary["trip_id"] = f"{generated_itinerary['trip_id']}_{uuid.uuid4().hex[:8]}"
+    generated_itinerary["token_usage"]["planner_prompt_tokens"] = 13
+    generated_itinerary["token_usage"]["planner_completion_tokens"] = 5
+
+    client.post(
+        "/trip/save",
+        json={
+            "trip_id": generated_itinerary["trip_id"],
+            "itinerary": generated_itinerary,
+            "user_id": "user_001",
+        },
+    )
+
+    response = client.get("/trip/stats")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_prompt_tokens"] >= 13
+    assert data["total_completion_tokens"] >= 5

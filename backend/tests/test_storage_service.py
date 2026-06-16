@@ -9,7 +9,7 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from app.models.schemas import TripRequest  # noqa: E402
-from app.services.storage_service import get_itinerary_by_trip_id, save_itinerary  # noqa: E402
+from app.services.storage_service import get_itinerary_by_trip_id, get_token_stats, save_itinerary  # noqa: E402
 from app.services.trip_service import generate_trip_itinerary  # noqa: E402
 
 
@@ -57,3 +57,18 @@ def test_get_itinerary_by_trip_id_returns_none_for_missing_trip() -> None:
     """测试查询不存在的 trip_id 时会返回 None。"""
     trip_detail = get_itinerary_by_trip_id("trip_not_exists")
     assert trip_detail is None
+
+
+def test_token_stats_include_planner_usage_from_saved_itinerary() -> None:
+    """测试 token 统计会保留已保存 itinerary 中的 planner token。"""
+    itinerary = generate_trip_itinerary(build_trip_request())
+    itinerary.trip_id = f"{itinerary.trip_id}_{uuid.uuid4().hex[:8]}"
+    assert itinerary.token_usage is not None
+    itinerary.token_usage.planner_prompt_tokens = 11
+    itinerary.token_usage.planner_completion_tokens = 7
+
+    save_itinerary(itinerary)
+    stats = get_token_stats()
+
+    assert stats.total_prompt_tokens >= 11
+    assert stats.total_completion_tokens >= 7
