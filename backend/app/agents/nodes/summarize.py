@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import json
+
 from app.agents.monitoring import monitored_node
 from app.agents.nodes.rules import clean_user_tips
 from app.agents.state import TripState
-from app.models.schemas import BudgetBreakdown, Itinerary, TokenUsage
+from app.config import USE_LLM_AGENTS
+from app.llm.registry import NARRATOR_SYSTEM_PROMPT
+from app.llm.structured import LLMUnavailable, call_structured_llm
+from app.models.schemas import BudgetBreakdown, Itinerary, NarratorResponse, TokenUsage
 
 
 def _budget_breakdown_from_report(state: TripState) -> BudgetBreakdown:
@@ -19,8 +24,7 @@ def _budget_breakdown_from_report(state: TripState) -> BudgetBreakdown:
     )
 
 
-@monitored_node("summarize")
-def summarize_node(state: TripState) -> dict:
+def _build_template_itinerary(state: TripState) -> Itinerary:
     request = state["request"]
     days = state.get("day_plans", [])
     preference_text = "、".join(request.preferences) if request.preferences else "常规旅行体验"
@@ -55,7 +59,75 @@ def summarize_node(state: TripState) -> dict:
         token_usage=state.get("token_usage") or TokenUsage(),
     )
 
+    return itinerary
+
+
+def _build_narrator_messages(state: TripState) -> list[dict[str, str]]:
+    request = state["request"]
+    days = state.get("day_plans", [])
+    payload = {
+        "destination": request.destination,
+        "pace": request.pace,
+        "preferences": request.preferences,
+        "dietary_preferences": request.dietary_preferences,
+        "hotel_level": request.hotel_level,
+        "special_notes": request.special_notes,
+        "days": [
+            {
+                "day_index": day.day_index,
+                "date": day.date.isoformat() if day.date else None,
+                "theme": day.theme,
+                "spots": [spot.name for spot in day.spots],
+                "meals": [meal.name for meal in day.meals],
+                "notes": day.notes,
+            }
+            for day in days
+        ],
+    }
+    return [
+        {"role": "system", "content": NARRATOR_SYSTEM_PROMPT},
+        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+    ]
+
+
+def _apply_narrator_result(itinerary: Itinerary, result: NarratorResponse) -> None:
+    itinerary.summary = result.summary
+    itinerary.tips = clean_user_tips(result.tips, itinerary.destination)
+    for day in itinerary.days:
+        key = str(day.day_index)
+        title = result.day_titles.get(key)
+        if title:
+            day.theme = title
+        notes = result.day_notes.get(key, [])
+        day.notes.extend(note for note in notes if note)
+
+
+@monitored_node("summarize")
+def summarize_node(state: TripState) -> dict:
+    itinerary = _build_template_itinerary(state)
+    trace_note = f"trace={len(state.get('trace', []))}"
+    if not USE_LLM_AGENTS:
+        return {
+            "itinerary": itinerary,
+            "_note": trace_note,
+        }
+
+    try:
+        narrator, tokens = call_structured_llm(_build_narrator_messages(state), NarratorResponse)
+    except LLMUnavailable as exc:
+        return {
+            "itinerary": itinerary,
+            "_node_status": "degraded",
+            "_note": f"narrator=degraded:{exc}",
+        }
+
+    _apply_narrator_result(itinerary, narrator)
+    usage = itinerary.token_usage or TokenUsage()
+    usage.planner_prompt_tokens += tokens.get("prompt_tokens", 0)
+    usage.planner_completion_tokens += tokens.get("completion_tokens", 0)
+    itinerary.token_usage = usage
     return {
         "itinerary": itinerary,
-        "_note": f"trace={len(trace_notes)}",
+        "_tokens": tokens,
+        "_note": "narrator=success",
     }
