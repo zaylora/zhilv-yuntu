@@ -154,6 +154,15 @@ class TokenUsage(BaseModel):
         return self.total_prompt_tokens + self.total_completion_tokens
 
 
+class NarratorResponse(BaseModel):
+    """Structured response produced by the LLM narrator agent."""
+
+    summary: str = Field(..., description="面向游客的整趟行程概述")
+    tips: list[str] = Field(default_factory=list, description="面向游客的实用建议")
+    day_titles: dict[str, str] = Field(default_factory=dict, description="按 day_index 字符串索引的每日标题")
+    day_notes: dict[str, list[str]] = Field(default_factory=dict, description="按 day_index 字符串索引的每日提示")
+
+
 class Itinerary(BaseModel):
     """完整行程。"""
 

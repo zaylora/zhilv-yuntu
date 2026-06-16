@@ -23,6 +23,7 @@ Base = declarative_base()
 
 
 # 大模型配置
+USE_LLM_AGENTS = os.getenv("USE_LLM_AGENTS", "false").lower() == "true"
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai_compatible")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
