@@ -1,0 +1,39 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "claude-code",
+  "appState": { "viewBackgroundColor": "#ffffff" },
+  "elements": [
+    { "id": "title", "type": "text", "x": 60, "y": 24, "width": 1000, "height": 40, "angle": 0, "strokeColor": "#1e293b", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300001, "fontSize": 28, "fontFamily": 2, "textAlign": "left", "verticalAlign": "top", "text": "分阶段实施路线图（按依赖关系，可独立上线/回滚）", "boundElements": null, "updated": 1 },
+
+    { "id": "baseline", "type": "line", "x": 90, "y": 200, "width": 1180, "height": 0, "angle": 0, "strokeColor": "#94a3b8", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 3, "roughness": 0, "opacity": 100, "seed": 300002, "points": [[0, 0], [1180, 0]], "boundElements": null, "updated": 1 },
+
+    { "id": "p0", "type": "rectangle", "x": 90, "y": 240, "width": 220, "height": 120, "angle": 0, "strokeColor": "#c2410c", "backgroundColor": "#fed7aa", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300010, "boundElements": [{ "id": "p0_t", "type": "text" }], "updated": 1 },
+    { "id": "p0_t", "type": "text", "x": 90, "y": 255, "width": 220, "height": 90, "angle": 0, "strokeColor": "#7c2d12", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300011, "fontSize": 15, "fontFamily": 2, "textAlign": "center", "verticalAlign": "middle", "text": "P0 接入层\napp/llm + 总开关\n+ 降级骨架\n风险：低", "containerId": "p0", "updated": 1 },
+
+    { "id": "p1", "type": "rectangle", "x": 350, "y": 240, "width": 220, "height": 120, "angle": 0, "strokeColor": "#6b21a8", "backgroundColor": "#f3e8ff", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300020, "boundElements": [{ "id": "p1_t", "type": "text" }], "updated": 1 },
+    { "id": "p1_t", "type": "text", "x": 350, "y": 255, "width": 220, "height": 90, "angle": 0, "strokeColor": "#581c87", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300021, "fontSize": 15, "fontFamily": 2, "textAlign": "center", "verticalAlign": "middle", "text": "P1 Narrator\n纯文案，最安全\nsummary/tips 提升\n风险：低", "containerId": "p1", "updated": 1 },
+
+    { "id": "p2", "type": "rectangle", "x": 610, "y": 240, "width": 220, "height": 120, "angle": 0, "strokeColor": "#6b21a8", "backgroundColor": "#f3e8ff", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300030, "boundElements": [{ "id": "p2_t", "type": "text" }], "updated": 1 },
+    { "id": "p2_t", "type": "text", "x": 610, "y": 250, "width": 220, "height": 100, "angle": 0, "strokeColor": "#581c87", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300031, "fontSize": 15, "fontFamily": 2, "textAlign": "center", "verticalAlign": "middle", "text": "P2 Coordinator+\nSpotCurator+MealCurator\n补高德 types/biz_ext\n+ 博查检索\n风险：中", "containerId": "p2", "updated": 1 },
+
+    { "id": "p3", "type": "rectangle", "x": 870, "y": 240, "width": 220, "height": 120, "angle": 0, "strokeColor": "#854d0e", "backgroundColor": "#fef9c3", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300040, "boundElements": [{ "id": "p3_t", "type": "text" }], "updated": 1 },
+    { "id": "p3_t", "type": "text", "x": 870, "y": 250, "width": 220, "height": 100, "angle": 0, "strokeColor": "#713f12", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300041, "fontSize": 15, "fontFamily": 2, "textAlign": "center", "verticalAlign": "middle", "text": "P3 Critic 评审回环\n+ Scheduler 消费 hints\n+ 编排层收敛三套拓扑\n风险：中", "containerId": "p3", "updated": 1 },
+
+    { "id": "p4", "type": "rectangle", "x": 1130, "y": 240, "width": 200, "height": 120, "angle": 0, "strokeColor": "#0369a1", "backgroundColor": "#e0f2fe", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300050, "boundElements": [{ "id": "p4_t", "type": "text" }], "updated": 1 },
+    { "id": "p4_t", "type": "text", "x": 1130, "y": 255, "width": 200, "height": 90, "angle": 0, "strokeColor": "#075985", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300051, "fontSize": 15, "fontFamily": 2, "textAlign": "center", "verticalAlign": "middle", "text": "P4 LLM 接入\nedit 单日改写\n（第二期）\n风险：中", "containerId": "p4", "updated": 1 },
+
+    { "id": "m0", "type": "ellipse", "x": 188, "y": 188, "width": 24, "height": 24, "angle": 0, "strokeColor": "#c2410c", "backgroundColor": "#c2410c", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300060, "boundElements": null, "updated": 1 },
+    { "id": "m1", "type": "ellipse", "x": 448, "y": 188, "width": 24, "height": 24, "angle": 0, "strokeColor": "#6b21a8", "backgroundColor": "#6b21a8", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300061, "boundElements": null, "updated": 1 },
+    { "id": "m2", "type": "ellipse", "x": 708, "y": 188, "width": 24, "height": 24, "angle": 0, "strokeColor": "#6b21a8", "backgroundColor": "#6b21a8", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300062, "boundElements": null, "updated": 1 },
+    { "id": "m3", "type": "ellipse", "x": 968, "y": 188, "width": 24, "height": 24, "angle": 0, "strokeColor": "#854d0e", "backgroundColor": "#854d0e", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300063, "boundElements": null, "updated": 1 },
+    { "id": "m4", "type": "ellipse", "x": 1218, "y": 188, "width": 24, "height": 24, "angle": 0, "strokeColor": "#0369a1", "backgroundColor": "#0369a1", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300064, "boundElements": null, "updated": 1 },
+
+    { "id": "dep01", "type": "arrow", "x": 312, "y": 300, "width": 36, "height": 0, "angle": 0, "strokeColor": "#475569", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300070, "points": [[0, 0], [36, 0]], "boundElements": null, "updated": 1 },
+    { "id": "dep12", "type": "arrow", "x": 572, "y": 300, "width": 36, "height": 0, "angle": 0, "strokeColor": "#475569", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300071, "points": [[0, 0], [36, 0]], "boundElements": null, "updated": 1 },
+    { "id": "dep23", "type": "arrow", "x": 832, "y": 300, "width": 36, "height": 0, "angle": 0, "strokeColor": "#475569", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300072, "points": [[0, 0], [36, 0]], "boundElements": null, "updated": 1 },
+    { "id": "dep34", "type": "arrow", "x": 1092, "y": 300, "width": 36, "height": 0, "angle": 0, "strokeColor": "#475569", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300073, "points": [[0, 0], [36, 0]], "boundElements": null, "updated": 1 },
+
+    { "id": "gate", "type": "text", "x": 90, "y": 410, "width": 1240, "height": 50, "angle": 0, "strokeColor": "#166534", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 2, "roughness": 0, "opacity": 100, "seed": 300080, "fontSize": 16, "fontFamily": 2, "textAlign": "left", "verticalAlign": "top", "text": "灰度开关：每阶段都受 USE_LLM_AGENTS 与各节点降级保护，可单独开启（如只开 Narrator）、独立回滚。\n依赖链：P1–P4 均依赖 P0 接入层就绪；P3 评审回环依赖 P2 的候选数据与 Scheduler 改造；P4 复用前序全部能力。", "boundElements": null, "updated": 1 }
+  ]
+}
