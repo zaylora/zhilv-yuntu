@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+import json
+
 from app.agents.monitoring import monitored_node
 from app.agents.nodes.rules import estimate_ticket_cost
 from app.agents.state import SpotCandidate, TripState
+from app.config import USE_LLM_AGENTS
+from app.llm.registry import SPOT_CURATOR_SYSTEM_PROMPT
+from app.llm.structured import LLMUnavailable, call_structured_llm
+from app.models.schemas import SpotCuratorResponse, TokenUsage
+from app.services.map_service import search_places
 
 
 KNOWN_DESTINATION_SPOTS: dict[str, list[tuple[str, float, float, str]]] = {
@@ -121,18 +128,13 @@ def _fallback_spots(destination: str, day_count: int) -> list[SpotCandidate]:
 
 
 def _search_amap_spots(destination: str, keywords: list[str], limit: int) -> list[SpotCandidate]:
-    try:
-        from app.services.map_service import search_places
-    except Exception:
-        return []
-
     candidates: list[SpotCandidate] = []
     seen_names: set[str] = set()
     search_keywords = [f"{destination} 景点", f"{destination} 旅游景点", *keywords]
     for keyword in search_keywords:
         query = keyword if destination in keyword else f"{destination} {keyword}"
         try:
-            places = search_places(query, city=destination, page_size=5)
+            places = search_places(query, city=destination, page_size=5, types="110000", citylimit=True)
         except Exception:
             continue
         for place in places:
@@ -152,7 +154,7 @@ def _search_amap_spots(destination: str, keywords: list[str], limit: int) -> lis
                     category=category,
                     is_indoor=_is_indoor(name, category),
                     ticket_estimate=estimate_ticket_cost(name, category),
-                    description=f"围绕“{keyword}”检索到的候选地点。",
+                    description=f"围绕\"{keyword}\"检索到的候选地点。",
                     address=place.get("address") or destination,
                     image_url=place.get("image_url"),
                 )
@@ -160,6 +162,44 @@ def _search_amap_spots(destination: str, keywords: list[str], limit: int) -> lis
             if len(candidates) >= limit:
                 return candidates
     return candidates
+
+
+def _build_spot_curator_messages(
+    candidates: list[SpotCandidate],
+    state: TripState,
+) -> list[dict[str, str]]:
+    """构造 SpotCurator LLM 的消息列表。"""
+    request = state["request"]
+    normalized = state.get("normalized")
+    planning_strategy = state.get("planning_strategy")
+
+    candidate_list = [
+        {
+            "name": c.name,
+            "category": c.category,
+            "is_indoor": c.is_indoor,
+            "address": c.address,
+        }
+        for c in candidates
+    ]
+
+    payload: dict = {
+        "destination": request.destination,
+        "candidates": candidate_list,
+        "travelers": request.travelers,
+        "preferences": request.preferences or [],
+        "pace": request.pace,
+        "spot_keywords": normalized.spot_keywords if normalized else [],
+    }
+    if planning_strategy:
+        payload["strategy"] = planning_strategy.strategy
+        payload["daily_themes"] = planning_strategy.daily_themes
+        payload["pace_normalized"] = planning_strategy.pace_normalized
+
+    return [
+        {"role": "system", "content": SPOT_CURATOR_SYSTEM_PROMPT},
+        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+    ]
 
 
 @monitored_node("spots")
@@ -172,7 +212,43 @@ def spot_search_node(state: TripState) -> dict:
     keywords = normalized.spot_keywords if normalized is not None else [request.destination]
     target_count = max(day_count * 3, 8)
 
-    candidates = _search_amap_spots(destination, keywords, target_count)
+    # ── 规则路径（兜底）：高德候选 ────────────────────────
+    amap_candidates = _search_amap_spots(destination, keywords, target_count)
+
+    # ── SpotCurator：仅在 USE_LLM_AGENTS=True 且有候选时介入 ──
+    token_usage_patch: dict = {}
+    if USE_LLM_AGENTS and amap_candidates:
+        try:
+            seen_names = {c.name for c in amap_candidates}
+            curator, tokens = call_structured_llm(
+                _build_spot_curator_messages(amap_candidates, state),
+                SpotCuratorResponse,
+            )
+            # 累加 token 到 state.token_usage（无论 picked 是否为空都执行）
+            usage = state.get("token_usage") or TokenUsage()
+            usage.planner_prompt_tokens += tokens.get("prompt_tokens", 0)
+            usage.planner_completion_tokens += tokens.get("completion_tokens", 0)
+            token_usage_patch = {"token_usage": usage, "_tokens": tokens}
+
+            # 只接受候选池内名称（去重保序）
+            picked_ordered: list[str] = []
+            seen_picked: set[str] = set()
+            for sel in curator.selected:
+                if sel.name in seen_names and sel.name not in seen_picked:
+                    picked_ordered.append(sel.name)
+                    seen_picked.add(sel.name)
+
+            if picked_ordered:
+                # 按 picked 顺序排前，其余追加在后
+                name_to_candidate = {c.name: c for c in amap_candidates}
+                reordered = [name_to_candidate[n] for n in picked_ordered]
+                rest = [c for c in amap_candidates if c.name not in seen_picked]
+                amap_candidates = reordered + rest
+        except LLMUnavailable:
+            # 降级：保持规则 amap_candidates，不抛
+            pass
+
+    candidates = amap_candidates
     status = "success"
     note = f"candidates={len(candidates)}"
     if len(candidates) < target_count:
@@ -183,8 +259,10 @@ def spot_search_node(state: TripState) -> dict:
         status = "degraded"
         note = f"amap_candidates={len(seen)}, fallback_total={len(candidates)}"
 
-    return {
+    result: dict = {
         "spot_candidates": candidates,
         "_node_status": status,
         "_note": note,
     }
+    result.update(token_usage_patch)
+    return result
