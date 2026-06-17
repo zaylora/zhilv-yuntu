@@ -16,6 +16,27 @@ from app.models.schemas import (
 )
 
 
+def _merge_token_usage(a: TokenUsage | None, b: TokenUsage | None) -> TokenUsage:
+    """LangGraph reducer：把两个 TokenUsage 逐字段相加，用于并行节点安全累加 token。
+
+    各节点返回**本次调用的增量** TokenUsage（不读 state 全量），
+    reducer 负责把增量累加进 state.token_usage，避免 LastValue 通道在并行
+    superstep 中因多写而抛 InvalidUpdateError。
+    """
+    base = a or TokenUsage()
+    delta = b or TokenUsage()
+    return TokenUsage(
+        rewrite_prompt_tokens=base.rewrite_prompt_tokens + delta.rewrite_prompt_tokens,
+        rewrite_completion_tokens=base.rewrite_completion_tokens + delta.rewrite_completion_tokens,
+        embedding_prompt_tokens=base.embedding_prompt_tokens + delta.embedding_prompt_tokens,
+        embedding_completion_tokens=base.embedding_completion_tokens + delta.embedding_completion_tokens,
+        planner_prompt_tokens=base.planner_prompt_tokens + delta.planner_prompt_tokens,
+        planner_completion_tokens=base.planner_completion_tokens + delta.planner_completion_tokens,
+        rerank_prompt_tokens=base.rerank_prompt_tokens + delta.rerank_prompt_tokens,
+        rerank_completion_tokens=base.rerank_completion_tokens + delta.rerank_completion_tokens,
+    )
+
+
 class GeoPoint(BaseModel):
     """A geographic point in latitude/longitude order."""
 
@@ -124,7 +145,7 @@ class TripState(TypedDict, total=False):
     replan_count: int
     max_replan: int
     itinerary: Itinerary
-    token_usage: TokenUsage
+    token_usage: Annotated[TokenUsage, _merge_token_usage]
     errors: Annotated[list[str], operator.add]
     trace: Annotated[list[NodeTrace], operator.add]
     # P2/P3 新增字段：规划策略与 Critic 反馈

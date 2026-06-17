@@ -97,12 +97,13 @@ def critic_node(state: TripState) -> dict:
     except LLMUnavailable:
         return _accept_patch("critic=degraded", state)
 
-    # ── 累加 token 到 state.token_usage ─────────────────────
-    usage = state.get("token_usage") or TokenUsage()
-    # call_structured_llm 返回的 tokens 键名可能是 input_tokens/output_tokens
-    # 也可能是 prompt_tokens/completion_tokens，兼容两种格式
-    usage.planner_prompt_tokens += tokens.get("prompt_tokens", 0) or tokens.get("input_tokens", 0)
-    usage.planner_completion_tokens += tokens.get("completion_tokens", 0) or tokens.get("output_tokens", 0)
+    # ── 累加 token：只返回本次调用的增量，由 state reducer 负责累加 ────────────
+    delta = TokenUsage(
+        # call_structured_llm 返回的 tokens 键名可能是 input_tokens/output_tokens
+        # 也可能是 prompt_tokens/completion_tokens，兼容两种格式
+        planner_prompt_tokens=tokens.get("prompt_tokens", 0) or tokens.get("input_tokens", 0),
+        planner_completion_tokens=tokens.get("completion_tokens", 0) or tokens.get("output_tokens", 0),
+    )
 
     # ── 达上限强制接受 ────────────────────────────────────────
     if report.verdict == "revise" and replan_count >= max_replan:
@@ -114,27 +115,47 @@ def critic_node(state: TripState) -> dict:
                 revise_hints=[],
             ),
             "revise_hints": [],
-            "token_usage": usage,
+            "token_usage": delta,
             "_tokens": tokens,
             "_note": "critic=accept(forced,max_replan_reached)",
         }
 
     # ── revise 未达上限 ───────────────────────────────────────
+    # Important #2 修复：budget 本轮已因超支自增 replan_count 时（over_budget=True 且
+    # budget_check 触发自增的条件为 over_budget and replan_count_before < max_replan），
+    # critic 就不再额外自增，避免单轮双重消耗回环额度。
+    # 注意：此时读到的 state.replan_count 是 budget_check 已自增后的值；
+    # budget 触发自增的前提是 over_budget=True（若已达上限 budget_check 也不增，
+    # 但此时 replan_count >= max_replan 在上面已强制接受，不会到这里）。
     if report.verdict == "revise":
-        return {
-            "critic_report": report,
-            "revise_hints": report.revise_hints,
-            "replan_count": replan_count + 1,
-            "token_usage": usage,
-            "_tokens": tokens,
-            "_note": f"critic=revise:{replan_count + 1}",
-        }
+        budget_report = state.get("budget_report")
+        budget_triggered_increment = (
+            budget_report is not None and getattr(budget_report, "over_budget", False)
+        )
+        if budget_triggered_increment:
+            # budget 本轮已自增，critic 只保留 hints 不再自增
+            return {
+                "critic_report": report,
+                "revise_hints": report.revise_hints,
+                "token_usage": delta,
+                "_tokens": tokens,
+                "_note": f"critic=revise(hints_only,budget_incremented):{replan_count}",
+            }
+        else:
+            return {
+                "critic_report": report,
+                "revise_hints": report.revise_hints,
+                "replan_count": replan_count + 1,
+                "token_usage": delta,
+                "_tokens": tokens,
+                "_note": f"critic=revise:{replan_count + 1}",
+            }
 
     # ── accept ────────────────────────────────────────────────
     return {
         "critic_report": report,
         "revise_hints": [],
-        "token_usage": usage,
+        "token_usage": delta,
         "_tokens": tokens,
         "_note": "critic=accept",
     }

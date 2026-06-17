@@ -12,7 +12,7 @@ from app.agents.nodes.spot_search import spot_search_node
 from app.agents.nodes.summarize import summarize_node
 from app.agents.nodes.transport_search import transport_search_node
 from app.agents.nodes.weather import weather_node
-from app.agents.state import BudgetReport, TripState
+from app.agents.state import BudgetReport, TripState, _merge_token_usage
 from app.config import TRIP_MAX_REPLAN
 from app.models.schemas import CriticResponse, Itinerary, TokenUsage, TripRequest
 
@@ -27,6 +27,11 @@ def _merge_patch(state: TripState, patch: dict) -> TripState:
     for key, value in patch.items():
         if key in {"trace", "errors"}:
             merged[key] = [*merged.get(key, []), *value]
+        elif key == "token_usage":
+            # token_usage 用 reducer 累加，与 LangGraph 通道语义保持一致。
+            # 节点只返回本次调用的增量 TokenUsage，_merge_patch 负责把增量
+            # 累加进 state.token_usage，避免本地/stream 路径覆盖已有累计值。
+            merged[key] = _merge_token_usage(merged.get(key), value)
         else:
             merged[key] = value
     return merged  # type: ignore[return-value]

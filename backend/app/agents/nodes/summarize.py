@@ -122,9 +122,21 @@ def summarize_node(state: TripState) -> dict:
         }
 
     _apply_narrator_result(itinerary, narrator)
+    # Narrator token：读 itinerary.token_usage（= state.token_usage 经 reducer 已累加全量）
+    # 再加上 narrator 本次调用的增量，写进 itinerary.token_usage 作为最终汇总统计。
+    # summarize 是 FINAL_NODES 单节点（不并行），此处汇总完整链路 token 不会被 reducer 再加，
+    # 同时不把 token_usage 放入返回 patch，避免与 reducer 交互出错。
     usage = itinerary.token_usage or TokenUsage()
-    usage.planner_prompt_tokens += tokens.get("prompt_tokens", 0)
-    usage.planner_completion_tokens += tokens.get("completion_tokens", 0)
+    usage = TokenUsage(
+        rewrite_prompt_tokens=usage.rewrite_prompt_tokens,
+        rewrite_completion_tokens=usage.rewrite_completion_tokens,
+        embedding_prompt_tokens=usage.embedding_prompt_tokens,
+        embedding_completion_tokens=usage.embedding_completion_tokens,
+        planner_prompt_tokens=usage.planner_prompt_tokens + tokens.get("prompt_tokens", 0),
+        planner_completion_tokens=usage.planner_completion_tokens + tokens.get("completion_tokens", 0),
+        rerank_prompt_tokens=usage.rerank_prompt_tokens,
+        rerank_completion_tokens=usage.rerank_completion_tokens,
+    )
     itinerary.token_usage = usage
     return {
         "itinerary": itinerary,

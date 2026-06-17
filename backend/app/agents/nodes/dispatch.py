@@ -96,17 +96,18 @@ def dispatch_node(state: TripState) -> dict:
     )
     normalized.meal_keywords = _dedup_ordered(normalized.meal_keywords, coordinator.meal_keywords)
 
-    # ── 累加 token 到 state.token_usage ───────────────
-    usage = state.get("token_usage") or TokenUsage()
-    usage.planner_prompt_tokens += tokens.get("prompt_tokens", 0)
-    usage.planner_completion_tokens += tokens.get("completion_tokens", 0)
+    # ── 累加 token：只返回本次调用的增量，由 state reducer 负责累加 ───────────
+    delta = TokenUsage(
+        planner_prompt_tokens=tokens.get("prompt_tokens", 0),
+        planner_completion_tokens=tokens.get("completion_tokens", 0),
+    )
 
     planning_strategy = PlanningStrategy.model_validate(coordinator.model_dump())
 
     return {
         "normalized": normalized,
         "planning_strategy": planning_strategy,
-        "token_usage": usage,
+        "token_usage": delta,
         "day_count": day_count,
         "_tokens": tokens,
         "_note": "coordinator=success",

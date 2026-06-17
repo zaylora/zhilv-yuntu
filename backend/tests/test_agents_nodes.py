@@ -575,6 +575,83 @@ def test_critic_degraded_when_llm_disabled(monkeypatch) -> None:
     assert patch.get("replan_count", 0) == 0, "降级时不应自增 replan_count"
 
 
+def test_critic_no_double_increment_when_budget_over(monkeypatch) -> None:
+    """[Important #2 TDD] budget 本轮已因超支自增 replan_count 时，
+    critic revise 不应再次自增（一轮最多消耗 1 次回环额度）。
+    revise_hints 仍应非空（供下轮 schedule 消费）。
+    """
+    import app.agents.nodes.critic as critic_mod
+    from app.agents.nodes.critic import critic_node
+    from app.agents.state import BudgetReport
+
+    fake_report = CriticResponse(
+        verdict="revise",
+        score=0.5,
+        issues=["行程不够紧凑"],
+        revise_hints=["增加景点"],
+    )
+    fake_tokens = {"input_tokens": 10, "output_tokens": 5}
+
+    monkeypatch.setattr(critic_mod, "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(critic_mod, "call_structured_llm",
+                        lambda messages, model: (fake_report, fake_tokens))
+
+    # budget_report.over_budget=True 表示本轮 budget_check 已自增 replan_count
+    # 模拟 budget_check 已把 replan_count 从 0 增到 1
+    state = _make_critic_state(replan_count=1, max_replan=3)
+    state = dict(state)
+    state["budget_report"] = BudgetReport(
+        total=9999,
+        over_budget=True,
+        missing_items=[],
+        passed=False,
+    )
+    patch = critic_node(state)
+
+    # critic 不应再自增（budget 本轮已经增了一次）
+    assert "replan_count" not in patch or patch.get("replan_count") == 1, (
+        f"budget 本轮已自增时 critic 不应再自增，patch.replan_count={patch.get('replan_count')}"
+    )
+    # revise_hints 应仍非空（critic 仍提供反馈供下轮消费）
+    assert patch.get("revise_hints"), "budget 超支时 critic 虽不自增，revise_hints 仍应非空"
+
+
+def test_critic_does_increment_when_budget_ok(monkeypatch) -> None:
+    """[Important #2 TDD] budget 本轮不超支时，critic revise 应正常自增 replan_count +1。"""
+    import app.agents.nodes.critic as critic_mod
+    from app.agents.nodes.critic import critic_node
+    from app.agents.state import BudgetReport
+
+    fake_report = CriticResponse(
+        verdict="revise",
+        score=0.6,
+        issues=["餐饮选择单一"],
+        revise_hints=["增加餐饮多样性"],
+    )
+    fake_tokens = {"input_tokens": 8, "output_tokens": 4}
+
+    monkeypatch.setattr(critic_mod, "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(critic_mod, "call_structured_llm",
+                        lambda messages, model: (fake_report, fake_tokens))
+
+    # budget_report.over_budget=False：budget 本轮没有自增
+    state = _make_critic_state(replan_count=0, max_replan=3)
+    state = dict(state)
+    state["budget_report"] = BudgetReport(
+        total=1500,
+        over_budget=False,
+        missing_items=[],
+        passed=True,
+    )
+    patch = critic_node(state)
+
+    # critic 应正常自增 +1
+    assert patch.get("replan_count") == 1, (
+        f"budget 不超支时 critic revise 应自增 replan_count=1，实际={patch.get('replan_count')}"
+    )
+    assert patch.get("revise_hints"), "critic revise 路径 revise_hints 应非空"
+
+
 def test_critic_degraded_when_llm_unavailable(monkeypatch) -> None:
     """LLM 可用但 call_structured_llm 抛 LLMUnavailable 时，critic_node 应走只读接受降级：
     不抛异常、verdict==accept、revise_hints==[]、patch 不含 replan_count（不触发回环）。

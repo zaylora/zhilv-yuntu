@@ -68,6 +68,137 @@ def test_run_trip_graph_returns_itinerary_with_trace_and_complete_days() -> None
     assert any(note.startswith("graph_trace:") for note in itinerary.source_notes)
 
 
+def test_run_trip_graph_accumulates_tokens_with_llm_enabled(monkeypatch) -> None:
+    """[Critical #1 TDD] 并行 fan-out 节点同时写 token_usage 不应抛 InvalidUpdateError，
+    最终 itinerary.token_usage.planner_prompt_tokens 应等于各节点增量之和（无重复计数）。
+
+    设计约束（确保可控的 token 期望值）：
+    1. search_places 返回 1 个合法 POI，让 amap_candidates 非空，确保 spots/meals LLM 被调用。
+    2. request.budget 设置足够大（999999），确保 budget_check 不触发超支回环，
+       critic 只被调用一次（accept），不产生非预期的额外 token 消耗。
+    """
+    import app.agents.nodes.dispatch as dispatch_mod
+    import app.agents.nodes.spot_search as spot_mod
+    import app.agents.nodes.meal_search as meal_mod
+    import app.agents.nodes.critic as critic_mod
+    import app.agents.nodes.summarize as summarize_mod
+
+    from app.models.schemas import (
+        CoordinatorResponse,
+        CriticResponse,
+        MealCuratorResponse,
+        NarratorResponse,
+        SpotCuratorResponse,
+        TripRequest as TR,
+    )
+
+    # ── 给每个节点 patch USE_LLM_AGENTS=True ──────────────────────────────────
+    monkeypatch.setattr(dispatch_mod, "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(spot_mod,     "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(meal_mod,     "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(critic_mod,   "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(summarize_mod,"USE_LLM_AGENTS", True)
+
+    # ── 各节点的 fake LLM 返回（每个节点 prompt_tokens 各不相同，方便精确计算总量） ──
+    DISPATCH_PROMPT = 100
+    SPOT_PROMPT     = 200
+    MEAL_PROMPT     = 300
+    CRITIC_PROMPT   = 50
+    NARRATOR_PROMPT = 75
+    COMPLETION = 10  # 所有节点 completion_tokens 统一为 10
+
+    # 仅当 budget 足够大（不触发超支回环）且各 LLM 都被调用时，期望值才成立：
+    EXPECTED_TOTAL_PROMPT = DISPATCH_PROMPT + SPOT_PROMPT + MEAL_PROMPT + CRITIC_PROMPT + NARRATOR_PROMPT
+
+    def _fake_dispatch_llm(messages, model):
+        return (
+            CoordinatorResponse(
+                strategy="测试策略",
+                daily_themes=["主题1", "主题2", "主题3"],
+                pace_normalized="轻松",
+                spot_keywords=["大理古城"],
+                meal_keywords=["白族菜"],
+            ),
+            {"prompt_tokens": DISPATCH_PROMPT, "completion_tokens": COMPLETION},
+        )
+
+    def _fake_spot_llm(messages, model):
+        return (
+            SpotCuratorResponse(selected=[], rejected_names=[]),
+            {"prompt_tokens": SPOT_PROMPT, "completion_tokens": COMPLETION},
+        )
+
+    def _fake_meal_llm(messages, model):
+        return (
+            MealCuratorResponse(selected=[], rejected_names=[]),
+            {"prompt_tokens": MEAL_PROMPT, "completion_tokens": COMPLETION},
+        )
+
+    def _fake_critic_llm(messages, model):
+        return (
+            CriticResponse(verdict="accept"),
+            {"prompt_tokens": CRITIC_PROMPT, "completion_tokens": COMPLETION},
+        )
+
+    def _fake_narrator_llm(messages, model):
+        return (
+            NarratorResponse(
+                summary="测试行程总结",
+                tips=["建议穿舒适鞋"],
+                day_titles={},
+                day_notes={},
+            ),
+            {"prompt_tokens": NARRATOR_PROMPT, "completion_tokens": COMPLETION},
+        )
+
+    monkeypatch.setattr(dispatch_mod,  "call_structured_llm", _fake_dispatch_llm)
+    monkeypatch.setattr(spot_mod,      "call_structured_llm", _fake_spot_llm)
+    monkeypatch.setattr(meal_mod,      "call_structured_llm", _fake_meal_llm)
+    monkeypatch.setattr(critic_mod,    "call_structured_llm", _fake_critic_llm)
+    monkeypatch.setattr(summarize_mod, "call_structured_llm", _fake_narrator_llm)
+
+    # ── patch 外部 IO ────────────────────────────────────────────────────────
+    # search_places 返回 1 个合法景点 POI（pass is_relevant_spot_place），
+    # 让 amap_candidates 非空，确保 SpotCurator / MealCurator LLM 实际被调用。
+    FAKE_SPOT = {"name": "大理古城", "latitude": 25.69, "longitude": 100.16, "type": "风景名胜"}
+    FAKE_MEAL = {"name": "砂锅鱼馆", "latitude": 25.69, "longitude": 100.16, "type": "餐饮服务"}
+    monkeypatch.setattr(spot_mod, "search_places", lambda *a, **kw: [FAKE_SPOT])
+    monkeypatch.setattr(meal_mod, "search_places", lambda *a, **kw: [FAKE_MEAL])
+    monkeypatch.setattr(meal_mod, "search_web",    lambda *a, **kw: [])
+
+    # ── 使用极大预算，确保 budget_check 不触发超支回环（critic 只被调用一次） ──
+    request = TR(
+        destination="大理",
+        start_date="2026-04-10",
+        end_date="2026-04-12",
+        travelers=2,
+        budget=999999,   # 足够大，绝不超支
+        preferences=["自然风景"],
+        pace="轻松",
+    )
+
+    # ── 执行（走 LangGraph 编译图；若 langgraph 未安装则走 local graph） ────────
+    itinerary = run_trip_graph(request)
+
+    # (a) 不抛 InvalidUpdateError（能走到这里即通过）
+    assert itinerary is not None, "run_trip_graph 应返回 itinerary"
+
+    # (b) token_usage 非 None 且 planner_prompt_tokens > 0
+    usage = itinerary.token_usage
+    assert usage is not None, "itinerary.token_usage 不应为 None"
+    assert usage.planner_prompt_tokens > 0, (
+        f"planner_prompt_tokens 应 > 0，实际={usage.planner_prompt_tokens}"
+    )
+
+    # (c) 无重复计数：总量应等于各节点增量之和
+    assert usage.planner_prompt_tokens == EXPECTED_TOTAL_PROMPT, (
+        f"planner_prompt_tokens 期望={EXPECTED_TOTAL_PROMPT}（各节点增量之和，无重复计数），"
+        f"实际={usage.planner_prompt_tokens}\n"
+        f"  若 > 期望则说明节点返回了全量而非增量（重复计数）；\n"
+        f"  若 < 期望则说明某些节点 LLM 未被调用（可能 amap_candidates 为空或 budget 触发额外回环）"
+    )
+
+
 def test_stream_and_run_share_same_node_order() -> None:
     """collect 与 stream 两条路径引用同一组 PHASE 常量，节点顺序一致。
 

@@ -224,10 +224,11 @@ def spot_search_node(state: TripState) -> dict:
                 _build_spot_curator_messages(amap_candidates, state),
                 SpotCuratorResponse,
             )
-            # 累加 token 到 state.token_usage（无论 picked 是否为空都执行）
-            usage = state.get("token_usage") or TokenUsage()
-            usage.planner_prompt_tokens += tokens.get("prompt_tokens", 0)
-            usage.planner_completion_tokens += tokens.get("completion_tokens", 0)
+            # 累加 token：只返回本次调用的增量，由 state reducer 负责累加
+            usage = TokenUsage(
+                planner_prompt_tokens=tokens.get("prompt_tokens", 0),
+                planner_completion_tokens=tokens.get("completion_tokens", 0),
+            )
             token_usage_patch = {"token_usage": usage, "_tokens": tokens}
 
             # 只接受候选池内名称（去重保序）
