@@ -119,27 +119,44 @@ def search_places(
     keyword: str,
     city: str | None = None,
     page_size: int = 5,
+    types: str | None = None,
+    citylimit: bool = True,
 ) -> list[dict[str, Any]]:
-    """根据关键词搜索 POI。"""
+    """根据关键词搜索 POI。
+
+    Args:
+        keyword: 搜索关键词。
+        city: 城市名称，默认使用 AMAP_DEFAULT_CITY。
+        page_size: 返回 POI 条数上限。
+        types: 高德 POI 类型代码，如 "110000"（景点）/"050000"（餐饮），None 表示不限。
+        citylimit: 是否将结果限定在 city 内，默认 True（限定在目的地城市内）。
+    """
+    citylimit_str = "true" if citylimit else "false"
     cache_key = (
-        f"map:place:{_normalize_cache_text(keyword)}:{_normalize_cache_text(city or AMAP_DEFAULT_CITY)}:{page_size}"
+        f"map:place:{_normalize_cache_text(keyword)}"
+        f":{_normalize_cache_text(city or AMAP_DEFAULT_CITY)}"
+        f":{page_size}"
+        f":{_normalize_cache_text(types)}"
+        f":{citylimit_str}"
     )
     cached_value = get_cached_json(cache_key)
     if cached_value is not None:
-        logger.info("map place cache hit: keyword=%s city=%s", keyword, city or AMAP_DEFAULT_CITY)
+        logger.info("map place cache hit: keyword=%s city=%s types=%s", keyword, city or AMAP_DEFAULT_CITY, types)
         return cached_value
-    logger.info("map place cache miss: keyword=%s city=%s", keyword, city or AMAP_DEFAULT_CITY)
+    logger.info("map place cache miss: keyword=%s city=%s types=%s", keyword, city or AMAP_DEFAULT_CITY, types)
 
-    payload = _request_amap(
-        "/place/text",
-        {
-            "keywords": keyword,
-            "city": city or AMAP_DEFAULT_CITY,
-            "offset": page_size,
-            "page": 1,
-            "extensions": "all",
-        },
-    )
+    params: dict[str, Any] = {
+        "keywords": keyword,
+        "city": city or AMAP_DEFAULT_CITY,
+        "offset": page_size,
+        "page": 1,
+        "extensions": "all",
+        "citylimit": citylimit_str,
+    }
+    if types:
+        params["types"] = types
+
+    payload = _request_amap("/place/text", params)
 
     pois = payload.get("pois", [])
     results: list[dict[str, Any]] = []
@@ -147,6 +164,8 @@ def search_places(
         latitude, longitude = _split_location(poi.get("location"))
         photos = poi.get("photos") if isinstance(poi.get("photos"), list) else []
         first_photo = photos[0] if photos and isinstance(photos[0], dict) else {}
+        raw_biz_ext = poi.get("biz_ext") or {}
+        biz_ext: dict[str, Any] = raw_biz_ext if isinstance(raw_biz_ext, dict) else {}
         results.append(
             {
                 "name": poi.get("name"),
@@ -158,6 +177,8 @@ def search_places(
                 "image_url": first_photo.get("url"),
                 "latitude": latitude,
                 "longitude": longitude,
+                "rating": _parse_float(biz_ext.get("rating")),
+                "avg_cost": _parse_float(biz_ext.get("cost")),
             }
         )
 
