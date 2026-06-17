@@ -16,6 +16,7 @@ from app.agents.nodes.dispatch import dispatch_node  # noqa: E402
 from app.agents.state import NormalizedDemand, SpotCandidate, MealCandidate  # noqa: E402
 from app.models.schemas import (  # noqa: E402
     CoordinatorResponse,
+    CriticResponse,
     DayPlan,
     MealCuratorResponse,
     MealSelection,
@@ -417,3 +418,180 @@ def test_spot_curator_tokens_cumulated_when_all_selected_outside_pool(monkeypatc
     assert usage is not None, "token_usage 不应为 None"
     assert usage.planner_prompt_tokens >= 20
     assert usage.planner_completion_tokens >= 8
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Task 5: Critic 节点 + Schedule 消费 hints 测试
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def _make_critic_state(replan_count=0, max_replan=2, revise_hints=None):
+    """构造 critic_node 的最小合法 state。"""
+    from app.agents.state import SpotCandidate, MealCandidate, WeatherContext
+    return {
+        "request": TripRequest(
+            destination="大理",
+            start_date="2026-04-10",
+            end_date="2026-04-12",
+            travelers=2,
+            budget=3200,
+            preferences=["自然风景"],
+            pace="适中",
+        ),
+        "day_plans": [
+            DayPlan(
+                day_index=1,
+                date=date(2026, 4, 10),
+                theme="苍山洱海",
+                notes=["天气晴朗"],
+            ),
+            DayPlan(
+                day_index=2,
+                date=date(2026, 4, 11),
+                theme="古城漫步",
+                notes=["建议步行"],
+            ),
+        ],
+        "budget_report": None,
+        "replan_count": replan_count,
+        "max_replan": max_replan,
+        "token_usage": TokenUsage(),
+        "revise_hints": revise_hints or [],
+        "trace": [],
+        "errors": [],
+    }
+
+
+def test_critic_sets_revise_hints_and_schedule_consumes_them(monkeypatch) -> None:
+    """
+    第一段：critic_node 正常 revise 路径 → revise_hints 非空、replan_count 自增、token 累加。
+    第二段：schedule_node 消费 revise_hints=["减少景点"] → 每天景点数降到 1。
+    """
+    import app.agents.nodes.critic as critic_mod
+    from app.agents.nodes.critic import critic_node
+    from app.agents.nodes.schedule import schedule_node
+    from app.agents.state import SpotCandidate, MealCandidate, WeatherContext
+
+    # ── 第一段：critic 正常 revise ──────────────────────────
+    fake_report = CriticResponse(
+        verdict="revise",
+        score=0.5,
+        issues=["景点过多"],
+        revise_hints=["减少景点"],
+    )
+    fake_tokens = {"input_tokens": 10, "output_tokens": 5}
+
+    monkeypatch.setattr(critic_mod, "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(
+        critic_mod,
+        "call_structured_llm",
+        lambda messages, model: (fake_report, fake_tokens),
+    )
+
+    state = _make_critic_state(replan_count=0, max_replan=2)
+    patch = critic_node(state)
+
+    assert patch["revise_hints"], "revise 路径下 revise_hints 应非空"
+    assert patch["critic_report"].verdict == "revise"
+    assert patch["replan_count"] == 1, "revise 未达上限时 replan_count 应自增 1"
+    usage = patch.get("token_usage")
+    assert usage is not None
+    assert usage.planner_prompt_tokens + usage.planner_completion_tokens > 0, "token 应已累加"
+
+    # ── 第二段：schedule 消费 hints → 景点数降到 1 ──────────
+    spot_candidates = [
+        SpotCandidate(name=f"景点{i}", latitude=25.6 + i * 0.01, longitude=100.1 + i * 0.01,
+                      is_indoor=False, ticket_estimate=30)
+        for i in range(10)
+    ]
+    meal_candidates = [
+        MealCandidate(name="餐厅A", latitude=25.69, longitude=100.16, avg_price=50)
+    ]
+    schedule_state = {
+        "request": TripRequest(
+            destination="大理",
+            start_date="2026-04-10",
+            end_date="2026-04-11",
+            travelers=2,
+            budget=3200,
+            preferences=[],
+            pace="适中",
+        ),
+        "day_count": 2,
+        "spot_candidates": spot_candidates,
+        "meal_candidates": meal_candidates,
+        "weather": WeatherContext(days=[]),
+        "transport_options": None,
+        "replan_count": 1,
+        "revise_hints": ["减少景点"],
+        "token_usage": TokenUsage(),
+    }
+    schedule_patch = schedule_node(schedule_state)
+    day_plans = schedule_patch["day_plans"]
+    for day in day_plans:
+        assert len(day.spots) <= 1, f"有 revise_hints=['减少景点'] 时每天景点数应 <=1，实际={len(day.spots)}"
+
+
+def test_critic_force_accept_at_max_replan(monkeypatch) -> None:
+    """replan_count >= max_replan 时，即使 LLM 返回 revise，critic 应强制接受，不自增 replan_count。"""
+    import app.agents.nodes.critic as critic_mod
+    from app.agents.nodes.critic import critic_node
+
+    fake_report = CriticResponse(
+        verdict="revise",
+        score=0.4,
+        issues=["还需改进"],
+        revise_hints=["减少景点"],
+    )
+    fake_tokens = {"input_tokens": 8, "output_tokens": 4}
+
+    monkeypatch.setattr(critic_mod, "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(
+        critic_mod,
+        "call_structured_llm",
+        lambda messages, model: (fake_report, fake_tokens),
+    )
+
+    state = _make_critic_state(replan_count=2, max_replan=2)
+    patch = critic_node(state)
+
+    assert patch["revise_hints"] == [], "达上限时强制接受，revise_hints 应为 []"
+    assert patch["critic_report"].verdict == "accept", "达上限时强制接受，verdict 应为 accept"
+    assert "replan_count" not in patch, "达上限时强制接受路径不应写入 replan_count"
+
+
+def test_critic_degraded_when_llm_disabled(monkeypatch) -> None:
+    """USE_LLM_AGENTS=False 时，critic_node 直接返回等价接受，不抛异常，不触发回环。"""
+    import app.agents.nodes.critic as critic_mod
+    from app.agents.nodes.critic import critic_node
+
+    monkeypatch.setattr(critic_mod, "USE_LLM_AGENTS", False)
+
+    state = _make_critic_state(replan_count=0, max_replan=2)
+    patch = critic_node(state)  # 不应抛异常
+
+    assert patch["revise_hints"] == [], "降级时 revise_hints 应为空"
+    assert patch["critic_report"].verdict == "accept", "降级时 verdict 应为 accept"
+    assert patch.get("replan_count", 0) == 0, "降级时不应自增 replan_count"
+
+
+def test_critic_degraded_when_llm_unavailable(monkeypatch) -> None:
+    """LLM 可用但 call_structured_llm 抛 LLMUnavailable 时，critic_node 应走只读接受降级：
+    不抛异常、verdict==accept、revise_hints==[]、patch 不含 replan_count（不触发回环）。
+    """
+    import app.agents.nodes.critic as critic_mod
+    from app.agents.nodes.critic import critic_node
+    from app.llm.structured import LLMUnavailable
+
+    def _raise_llm_unavailable(messages, model):
+        raise LLMUnavailable("模拟超时")
+
+    monkeypatch.setattr(critic_mod, "USE_LLM_AGENTS", True)
+    monkeypatch.setattr(critic_mod, "call_structured_llm", _raise_llm_unavailable)
+
+    state = _make_critic_state(replan_count=0, max_replan=2)
+    patch = critic_node(state)  # 不应抛异常
+
+    assert patch["critic_report"].verdict == "accept", "LLMUnavailable 降级时 verdict 应为 accept"
+    assert patch["revise_hints"] == [], "LLMUnavailable 降级时 revise_hints 应为 []"
+    assert "replan_count" not in patch, "LLMUnavailable 降级时不应写入 replan_count，避免触发回环"

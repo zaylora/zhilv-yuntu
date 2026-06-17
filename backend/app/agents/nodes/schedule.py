@@ -56,6 +56,24 @@ def schedule_node(state: TripState) -> dict:
     weather_days = state.get("weather").days if state.get("weather") is not None else []
     transport_plan = state.get("transport_options")
 
+    # ── 消费 revise_hints ─────────────────────────────────────
+    hints = state.get("revise_hints") or []
+    hints_text = " ".join(hints)
+
+    # 景点上限：命中"减少景点"/"景点过多"/"减到"/"景点太多"语义 → 降到 1
+    spot_max = 2
+    if hints and any(
+        kw in hints_text
+        for kw in ("减少景点", "景点过多", "减到", "景点太多")
+    ):
+        spot_max = 1
+
+    # 室内优先：命中"室内"/"雨天"语义 → 等效 is_rainy=True 排序
+    force_indoor = bool(hints and any(kw in hints_text for kw in ("室内", "雨天")))
+
+    # 节奏放慢：命中"轻松"/"节奏"/"放慢"语义 → 额外压低餐饮/交通系数
+    relax_factor = 0.90 if hints and any(kw in hints_text for kw in ("轻松", "节奏", "放慢")) else 1.0
+
     clusters, centroids = cluster_spots_by_day(spot_candidates, day_count)
     meal_costs = prorate_amounts(request.budget * (0.28 if "美食" in request.preferences else 0.22), meal_weights(day_count, request.preferences))
     transport_costs = prorate_amounts(request.budget * 0.14, transport_weights(day_count, request.pace))
@@ -64,12 +82,19 @@ def schedule_node(state: TripState) -> dict:
         meal_costs = [round(value * 0.88, 2) for value in meal_costs]
         transport_costs = [round(value * 0.90, 2) for value in transport_costs]
 
+    # 应用 relax_factor（在 replan_count 折扣之后再乘）
+    if relax_factor < 1.0:
+        meal_costs = [round(value * relax_factor, 2) for value in meal_costs]
+        transport_costs = [round(value * relax_factor, 2) for value in transport_costs]
+
     days: list[DayPlan] = []
     for index in range(day_count):
         current_date = request.start_date + timedelta(days=index)
         weather_day = weather_days[index] if index < len(weather_days) else None
         cluster = clusters[index] if index < len(clusters) else []
-        selected_spots = _pick_rain_adjusted_spots(cluster, bool(weather_day and weather_day.is_rainy), max_count=2)
+        # 雨天或强制室内优先时都走室内优先排序
+        is_rainy_effective = bool(weather_day and weather_day.is_rainy) or force_indoor
+        selected_spots = _pick_rain_adjusted_spots(cluster, is_rainy_effective, max_count=spot_max)
         if not selected_spots:
             selected_spots = [
                 SpotCandidate(
