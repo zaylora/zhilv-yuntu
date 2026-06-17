@@ -149,8 +149,28 @@ def test_edit_trip_itinerary_can_apply_llm_day_edit(monkeypatch) -> None:
     assert updated_itinerary.days[1].meals[0].name == "海景下午茶"
     assert updated_itinerary.days[1].notes[-1] == "下午再出发，去双廊慢慢看日落。"
 
-def test_generate_trip_itinerary_includes_graph_trace_without_local_guide_context() -> None:
-    """测试生成结果来自 graph 编排，且不再依赖本地攻略检索。"""
+def test_generate_trip_itinerary_includes_graph_trace_without_local_guide_context(monkeypatch) -> None:
+    """测试生成结果来自 graph 编排，且不再依赖本地攻略检索。
+
+    spot_search / meal_search 用顶层 `from app.services.map_service import search_places`，
+    名字已绑定到各节点模块命名空间，故 monkeypatch 必须打在节点模块上（而非 map_service），
+    返回空以强制走 _fallback_*，使测试不依赖真实外部 API、断言稳定，
+    同时仍验证 graph 编排/graph_trace/合理景点。
+    """
+    import app.agents.nodes.meal_search as meal_search_mod
+    import app.agents.nodes.spot_search as spot_search_mod
+    import app.services.map_service as map_service_mod
+
+    def _no_live_amap(*args, **kwargs):
+        raise AssertionError("测试不应调用真实高德 search_places")
+
+    # 守卫：源头设为“被调即失败”，确认隔离完整、无任何路径打到真实高德。
+    monkeypatch.setattr(map_service_mod, "search_places", _no_live_amap)
+    # 节点用顶层 import 绑定的名字，stub 成返回空以走 _fallback_*。
+    monkeypatch.setattr(spot_search_mod, "search_places", lambda *args, **kwargs: [])
+    monkeypatch.setattr(meal_search_mod, "search_places", lambda *args, **kwargs: [])
+    monkeypatch.setattr(meal_search_mod, "search_web", lambda *args, **kwargs: [])
+
     itinerary = generate_trip_itinerary(build_trip_request())
 
     joined_notes = "\n".join(itinerary.source_notes)
