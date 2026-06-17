@@ -165,3 +165,47 @@ def test_generate_trip_itinerary_includes_graph_trace_without_local_guide_contex
         or "崇圣寺三塔" in joined_spots
         or "洱海生态廊道" in joined_spots
     )
+
+
+def test_trip_service_uses_shared_rules_helpers() -> None:
+    """验证 trip_service 已复用 rules 的共享 helper，私有副本不再存在。"""
+    import app.services.trip_service as ts
+    from app.agents.nodes import rules
+
+    # 1. 共享函数对象身份一致（确认是同一个函数，不是副本）
+    assert ts.estimate_ticket_cost is rules.estimate_ticket_cost, (
+        "trip_service.estimate_ticket_cost 应引用 rules.estimate_ticket_cost"
+    )
+    assert ts.prorate_amounts is rules.prorate_amounts, (
+        "trip_service.prorate_amounts 应引用 rules.prorate_amounts"
+    )
+    assert ts.clean_user_tips is rules.clean_user_tips, (
+        "trip_service.clean_user_tips 应引用 rules.clean_user_tips"
+    )
+    assert ts.stable_bucket is rules.stable_bucket, (
+        "trip_service.stable_bucket 应引用 rules.stable_bucket"
+    )
+
+    # 2. 旧私有名已不存在
+    assert not hasattr(ts, "_estimate_ticket_cost"), "私有副本 _estimate_ticket_cost 不应再存在"
+    assert not hasattr(ts, "_prorate_amounts"), "私有副本 _prorate_amounts 不应再存在"
+    assert not hasattr(ts, "_clean_user_tips"), "私有副本 _clean_user_tips 不应再存在"
+    assert not hasattr(ts, "_stable_bucket"), "私有副本 _stable_bucket 不应再存在"
+    assert not hasattr(ts, "_build_hotel_weights"), "私有副本 _build_hotel_weights 不应再存在"
+    assert not hasattr(ts, "_build_meal_weights"), "私有副本 _build_meal_weights 不应再存在"
+    assert not hasattr(ts, "_build_transport_weights"), "私有副本 _build_transport_weights 不应再存在"
+
+    # 3. 行为等价回归：estimate_ticket_cost 结果与 rules 直接调用一致
+    for spot_name, desc in [("大理古城", None), ("崇圣寺三塔", "三塔景区"), ("洱海游船", "游船观光")]:
+        assert ts.estimate_ticket_cost(spot_name, desc) == rules.estimate_ticket_cost(spot_name, desc), (
+            f"estimate_ticket_cost({spot_name!r}) 结果不一致"
+        )
+
+    # 4. prorate_amounts 数值等价
+    result = ts.prorate_amounts(100.0, [1.0, 2.0, 3.0])
+    expected = rules.prorate_amounts(100.0, [1.0, 2.0, 3.0])
+    assert result == expected, f"prorate_amounts 结果不一致: {result} != {expected}"
+
+    # 5. clean_user_tips 结果等价
+    raw_tips = ["建议带伞", "LLM 生成的提示", "古城值得一去"]
+    assert ts.clean_user_tips(raw_tips, "大理") == rules.clean_user_tips(raw_tips, "大理")
