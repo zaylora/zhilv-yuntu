@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date as DateType, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TripRequest(BaseModel):
@@ -161,6 +161,81 @@ class NarratorResponse(BaseModel):
     tips: list[str] = Field(default_factory=list, description="面向游客的实用建议")
     day_titles: dict[str, str] = Field(default_factory=dict, description="按 day_index 字符串索引的每日标题")
     day_notes: dict[str, list[str]] = Field(default_factory=dict, description="按 day_index 字符串索引的每日提示")
+
+
+# ──────────────────────────────────────────────
+# P2/P3 LLM Agent 内部响应模型
+# ──────────────────────────────────────────────
+
+
+class PlanningStrategy(BaseModel):
+    """Coordinator 节点输出的规划策略，后续节点据此筛选景点与餐饮。"""
+
+    strategy: str = Field(default="", description="整体游览策略描述")
+    daily_themes: list[str] = Field(default_factory=list, description="每日主题列表")
+    pace_normalized: str | None = Field(default=None, description="标准化节奏：轻松/适中/紧凑")
+    spot_keywords: list[str] = Field(default_factory=list, description="景点搜索关键词")
+    meal_keywords: list[str] = Field(default_factory=list, description="餐饮搜索关键词")
+    budget_hint: dict[str, float] = Field(default_factory=dict, description="预算比例提示，如 {hotel: 0.5}")
+    hard_constraints: list[str] = Field(default_factory=list, description="必须满足的硬性约束")
+
+
+class CoordinatorResponse(PlanningStrategy):
+    """Coordinator LLM 节点的完整响应，继承自 PlanningStrategy。"""
+
+    # 目前与 PlanningStrategy 字段完全一致，子类化保留扩展空间
+
+
+class SpotSelection(BaseModel):
+    """SpotCurator 选中的单个景点。"""
+
+    name: str = Field(..., description="景点名称")
+    reason: str | None = Field(default=None, description="选中原因")
+    is_indoor: bool = Field(default=False, description="是否室内景点")
+    suggested_hours: float = Field(default=1.0, ge=0, description="建议游览时长（小时）")
+    category: str | None = Field(default=None, description="景点类别")
+
+
+class SpotCuratorResponse(BaseModel):
+    """SpotCurator LLM 节点的完整响应。"""
+
+    selected: list[SpotSelection] = Field(default_factory=list, description="选中的景点列表")
+    rejected_names: list[str] = Field(default_factory=list, description="被拒绝的景点名称及原因描述")
+
+
+class MealSelection(BaseModel):
+    """MealCurator 选中的单个餐厅。"""
+
+    name: str = Field(..., description="餐厅名称")
+    cuisine: str | None = Field(default=None, description="菜系")
+    rating: float | None = Field(default=None, ge=0, le=5, description="评分（0-5）")
+    signature_dishes: list[str] = Field(default_factory=list, description="招牌菜")
+    review_digest: str | None = Field(default=None, description="评价摘要")
+    dietary_ok: bool = Field(default=True, description="是否符合饮食偏好约束")
+    reason: str | None = Field(default=None, description="推荐原因")
+
+
+class MealCuratorResponse(BaseModel):
+    """MealCurator LLM 节点的完整响应。"""
+
+    selected: list[MealSelection] = Field(default_factory=list, description="选中的餐厅列表")
+    rejected_names: list[str] = Field(default_factory=list, description="被拒绝的餐厅名称及原因描述")
+
+
+class CriticResponse(BaseModel):
+    """Critic LLM 节点的完整响应，用于评审行程质量。"""
+
+    verdict: str = Field(default="accept", description="裁决：accept 或 revise")
+    score: float | None = Field(default=None, ge=0, le=1, description="质量评分（0-1），未评分时为 None")
+    issues: list[str] = Field(default_factory=list, description="发现的问题列表")
+    revise_hints: list[str] = Field(default_factory=list, description="修改建议，供 replan 节点参考")
+
+    @field_validator("verdict", mode="before")
+    @classmethod
+    def _normalize_verdict(cls, value: object) -> str:
+        """规范化裁决值：去空格转小写，非法值回退为 accept（等价接受，避免误触发回环）。"""
+        text = str(value or "").strip().lower()
+        return text if text in {"accept", "revise"} else "accept"
 
 
 class Itinerary(BaseModel):

@@ -6,7 +6,14 @@ from typing import Annotated, TypedDict
 
 from pydantic import BaseModel, Field
 
-from app.models.schemas import DayPlan, Itinerary, TokenUsage, TripRequest
+from app.models.schemas import (
+    CriticResponse,
+    DayPlan,
+    Itinerary,
+    PlanningStrategy,
+    TokenUsage,
+    TripRequest,
+)
 
 
 class GeoPoint(BaseModel):
@@ -21,6 +28,7 @@ class NormalizedDemand(BaseModel):
 
     city_canonical: str
     spot_keywords: list[str] = Field(default_factory=list)
+    meal_keywords: list[str] = Field(default_factory=list)
     dietary_norm: list[str] = Field(default_factory=list)
     transport_intent: str = "市内打车和步行为主"
     hotel_level: str | None = None
@@ -51,6 +59,9 @@ class MealCandidate(BaseModel):
     avg_price: float = Field(default=0.0, ge=0)
     dietary_tags: list[str] = Field(default_factory=list)
     notes: str | None = None
+    # P2/P3 新增字段：来自 Bocha/大众点评等搜索的补充信息
+    rating: float | None = Field(default=None, ge=0, le=5, description="评分（0-5）")
+    avg_cost: float | None = Field(default=None, ge=0, description="人均消费")
 
 
 class TransportPlan(BaseModel):
@@ -116,3 +127,7 @@ class TripState(TypedDict, total=False):
     token_usage: TokenUsage
     errors: Annotated[list[str], operator.add]
     trace: Annotated[list[NodeTrace], operator.add]
+    # P2/P3 新增字段：规划策略与 Critic 反馈
+    planning_strategy: PlanningStrategy
+    revise_hints: list[str]
+    critic_report: CriticResponse

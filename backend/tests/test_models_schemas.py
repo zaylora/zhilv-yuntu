@@ -13,10 +13,15 @@ if str(BACKEND_DIR) not in sys.path:
 
 from app.models.schemas import (  # noqa: E402
     BudgetBreakdown,
+    CoordinatorResponse,
+    CriticResponse,
     DayPlan,
     HotelItem,
     Itinerary,
+    MealCuratorResponse,
     MealItem,
+    PlanningStrategy,
+    SpotCuratorResponse,
     SpotItem,
     TransportItem,
     TripEditRequest,
@@ -188,3 +193,68 @@ def test_trip_save_request_can_hold_full_itinerary() -> None:
     assert save_request.trip_id == "trip_dali_demo_001"
     assert save_request.itinerary.summary == "适合两人轻松游玩的 3 日行程示例。"
     assert save_request.user_id == "user_001"
+
+
+def test_llm_agent_response_models_validate_expected_shapes() -> None:
+    '''测试 P2/P3 内部 LLM Agent 响应模型能校验结构化输出'''
+    strategy = CoordinatorResponse(
+        strategy="轻松慢游",
+        daily_themes=["古城慢游", "洱海日落"],
+        pace_normalized="轻松",
+        spot_keywords=["大理 古城", "大理 洱海"],
+        meal_keywords=["大理 白族菜"],
+        budget_hint={"hotel": 0.5, "meals": 0.22, "transport": 0.14},
+        hard_constraints=["少辣"],
+    )
+    spot_result = SpotCuratorResponse(
+        selected=[
+            {
+                "name": "大理古城",
+                "reason": "适合慢游",
+                "is_indoor": False,
+                "suggested_hours": 2.0,
+                "category": "古城",
+            }
+        ],
+        rejected_names=["大理市公安局: 非景点"],
+    )
+    meal_result = MealCuratorResponse(
+        selected=[
+            {
+                "name": "白族风味餐厅",
+                "cuisine": "白族菜",
+                "rating": 4.6,
+                "signature_dishes": ["砂锅鱼"],
+                "review_digest": "口味清淡可选",
+                "dietary_ok": True,
+                "reason": "符合少辣要求",
+            }
+        ]
+    )
+    critic_result = CriticResponse(
+        verdict="revise",
+        score=0.62,
+        issues=["第2天景点过多"],
+        revise_hints=["第2天景点减到2个"],
+    )
+
+    assert isinstance(strategy, PlanningStrategy)
+    assert spot_result.selected[0].name == "大理古城"
+    assert meal_result.selected[0].rating == 4.6
+    assert critic_result.revise_hints == ["第2天景点减到2个"]
+
+
+def test_meal_item_keeps_enrichment_inside_notes() -> None:
+    '''测试本阶段不扩展对外 MealItem 字段，餐饮增强仍写入 notes'''
+    meal = MealItem(name="白族风味餐厅", meal_type="午餐", notes="评分 4.6；招牌菜：砂锅鱼")
+
+    assert meal.notes == "评分 4.6；招牌菜：砂锅鱼"
+    assert not hasattr(meal, "rating")
+
+
+def test_critic_response_normalizes_verdict_and_defaults_score_none() -> None:
+    '''测试 Critic 裁决值大小写/非法值被规范化，未评分时 score 为 None'''
+    assert CriticResponse(verdict="REVISE").verdict == "revise"
+    assert CriticResponse(verdict=" Accept ").verdict == "accept"
+    assert CriticResponse(verdict="reject").verdict == "accept"
+    assert CriticResponse().score is None

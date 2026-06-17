@@ -49,6 +49,13 @@ AMAP_TIMEOUT_SECONDS = int(os.getenv("AMAP_TIMEOUT_SECONDS", "20"))
 ENABLE_AMAP_ENRICHMENT = os.getenv("ENABLE_AMAP_ENRICHMENT", "false").lower() == "true"
 
 
+# Bocha AI 联网搜索配置（P2/P3 阶段可选）
+BOCHA_ENABLED = os.getenv("BOCHA_ENABLED", "false").lower() == "true"
+BOCHA_API_KEY = os.getenv("BOCHA_API_KEY", "")
+BOCHA_BASE_URL = os.getenv("BOCHA_BASE_URL", "https://api.bochaai.com/v1")
+BOCHA_TIMEOUT_SECONDS = int(os.getenv("BOCHA_TIMEOUT_SECONDS", "15"))
+
+
 # Trip graph orchestration
 USE_LANGGRAPH = os.getenv("USE_LANGGRAPH", "true").lower() == "true"
 TRIP_MAX_REPLAN = int(os.getenv("TRIP_MAX_REPLAN", "2"))
